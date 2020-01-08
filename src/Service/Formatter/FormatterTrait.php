@@ -16,7 +16,7 @@ use Throwable;
  */
 trait FormatterTrait
 {
-    protected function normalize($data, $depth = 0)
+    protected function normalize($data, int $depth = 0)
     {
         $prenormalizedData = $this->prenormalizeData($data, $depth);
 
@@ -30,7 +30,7 @@ trait FormatterTrait
         }
 
         if ($data instanceof PersistentCollection) {
-            return $data->isInitialized() ? iterator_to_array($data) : '[Uninitialized]';
+            return $data->isInitialized() ? iterator_to_array($data) : get_class($data);
         }
 
         if ($data instanceof Proxy || $data instanceof LegacyProxy) {
@@ -90,7 +90,7 @@ trait FormatterTrait
         return '[Uninitialized]';
     }
 
-    protected function toJson($data, $ignoreErrors = false): string
+    protected function toJson($data, bool $ignoreErrors = false): string
     {
         return Utils::jsonEncode(
             $data,

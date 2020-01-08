@@ -87,6 +87,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
         /** @var PersistedEntity $child */
         $child = $manager->find(PersistedEntity::class, $child->getId());
         $this->assertWithoutQueries(function () use ($child) {
+            // children and parent are not loaded yet
             $this->logger->info('INFO', ['entity' => $child]);
         });
 
@@ -94,20 +95,24 @@ class FunctionalFormattersTest extends FunctionalTestCase
         $entity = $manager->find(PersistedEntity::class, $entity->getId());
 
         $this->assertWithoutQueries(function () use ($entity) {
+            // this is only a proxy with just ID
             $this->logger->info('INFO', ['entity' => $entity]);
         });
 
         $entity->setField('Modified');
         $this->assertWithoutQueries(function () use ($entity) {
+            // we've initialized the proxy and changed the field value
             $this->logger->info('INFO', ['entity' => $entity]);
         });
 
         $entity->getChildren()->count();
         $this->assertWithoutQueries(function () use ($entity) {
+            // we've initialized children collection
             $this->logger->info('INFO', ['entity' => $entity]);
         });
 
         $this->assertWithoutQueries(function () use ($child) {
+            // parent and children were initialized
             $this->logger->info('INFO', ['entity' => $child]);
         });
 
@@ -122,7 +127,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
                 'id' => 6,
                 'field' => '1.2',
                 'parent' => ['id' => 1],
-                'children' => '[Uninitialized]',
+                'children' => 'Doctrine\\ORM\\PersistentCollection',
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             $messages[0]->getAdditional('ctxt_entity')
         );
@@ -137,7 +142,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
                 'id' => 1,
                 'field' => 'Modified',
                 'parent' => null,
-                'children' => '[Uninitialized]',
+                'children' => 'Doctrine\\ORM\\PersistentCollection',
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             $messages[2]->getAdditional('ctxt_entity')
         );
@@ -163,7 +168,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
                     'parent' => null,
                     'children' => 'Doctrine\\ORM\\PersistentCollection',
                 ],
-                'children' => '[Uninitialized]',
+                'children' => 'Doctrine\\ORM\\PersistentCollection',
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             $messages[4]->getAdditional('ctxt_entity')
         );
