@@ -1,4 +1,4 @@
-# Paysera PHP library skeleton
+# Logging extra bundle
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE)
