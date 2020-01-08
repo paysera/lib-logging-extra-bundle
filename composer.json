@@ -1,0 +1,42 @@
+{
+    "name": "paysera/lib-logging-extra-bundle",
+    "description": "Symfony bundle for further Monolog, Sentry and Graylog integration",
+    "keywords": ["logging", "monolog", "sentry", "graylog", "log"],
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Paysera\\LoggingExtraBundle\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Paysera\\LoggingExtraBundle\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": ">=7.1,<7.5",
+        "sentry/sentry-symfony": "^3.0",
+        "symfony/monolog-bundle": "^3.4",
+        "graylog2/gelf-php": "^1.4.2",
+        "symfony/framework-bundle": "^3.4.26|^4.2.7",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.5",
+        "mockery/mockery": "^1.2",
+        "paysera/lib-php-cs-fixer-config": "^2.2.2",
+        "symfony/yaml": "^3.4.34|^4.3",
+        "doctrine/doctrine-bundle": "^1.4",
+        "doctrine/orm": "^2.5.14"
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
+    "scripts": {
+        "phpunit": "phpunit",
+        "fix-cs": "paysera-php-cs-fixer fix",
+        "test-cs": "paysera-php-cs-fixer fix --dry-run -v",
+        "test": ["@phpunit", "@test-cs"]
+    }
+}

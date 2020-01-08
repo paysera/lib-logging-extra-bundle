@@ -1,0 +1,89 @@
+version: '2'
+services:
+
+# graylog:
+    mongo:
+        image: "mongo:3"
+    elasticsearch:
+        image: "elasticsearch:2"
+        command: "elasticsearch -Des.cluster.name='graylog'"
+    graylog:
+        image: graylog2/server:2.1.2-1
+        environment:
+            GRAYLOG_PASSWORD_SECRET: somepasswordpepper
+            GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+            GRAYLOG_WEB_ENDPOINT_URI: http://127.0.0.1:9001/api
+        depends_on:
+            - mongo
+            - elasticsearch
+        ports:
+            - "9001:9000"
+            - "12201:12201/udp"
+
+# sentry:
+    redis:
+        image: redis:3.2-alpine
+        command: redis-server --appendonly yes
+        volumes:
+            - /data
+
+    rabbitmq:
+        image: rabbitmq:3
+        volumes:
+            - /var/lib/rabbitmq
+
+    postgres:
+        image: postgres:9.5
+        volumes:
+            - /var/lib/postgresql/data
+        environment:
+            POSTGRES_PASSWORD: sentry
+            POSTGRES_USER: sentry
+
+    sentry:
+        image: sentry:9.0.0
+        ports:
+            - 9002:9000
+        volumes:
+            - /var/lib/sentry/files
+        environment:
+            SENTRY_SECRET_KEY: secret
+            SENTRY_RABBITMQ_HOST: rabbitmq
+            SENTRY_REDIS_HOST: redis
+            SENTRY_POSTGRES_HOST: postgres
+            SENTRY_DB_USER: sentry
+            SENTRY_DB_PASSWORD: sentry
+        depends_on:
+            - redis
+            - rabbitmq
+            - postgres
+
+    sentry-cron:
+        image: sentry:9.0.0
+        environment:
+            SENTRY_SECRET_KEY: secret
+            SENTRY_RABBITMQ_HOST: rabbitmq
+            SENTRY_REDIS_HOST: redis
+            SENTRY_POSTGRES_HOST: postgres
+            SENTRY_DB_USER: sentry
+            SENTRY_DB_PASSWORD: sentry
+        depends_on:
+            - redis
+            - rabbitmq
+            - postgres
+        command: sentry run cron
+
+    sentry-worker:
+        image: sentry:9.0.0
+        environment:
+            SENTRY_SECRET_KEY: secret
+            SENTRY_RABBITMQ_HOST: rabbitmq
+            SENTRY_REDIS_HOST: redis
+            SENTRY_POSTGRES_HOST: postgres
+            SENTRY_DB_USER: sentry
+            SENTRY_DB_PASSWORD: sentry
+        depends_on:
+            - redis
+            - rabbitmq
+            - postgres
+        command: sentry run worker

@@ -1,0 +1,45 @@
+framework:
+    secret: 'secret'
+
+doctrine:
+    orm:
+        mappings:
+            main:
+                dir: "%kernel.root_dir%/Entity"
+                prefix: "Paysera\\LoggingExtraBundle\\Tests\\Functional\\Fixtures\\Entity"
+                type: annotation
+    dbal:
+        driver:  pdo_sqlite
+        memory:  true
+        charset: UTF8
+
+services:
+    graylog_handler:
+        parent: monolog.handler.graylog
+        decorates: monolog.handler.graylog
+        class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler\TestGraylogHandler
+        public: true
+    main_handler:
+        alias: monolog.handler.graylog_fingers_crossed
+        public: true
+    public_logger:
+        alias: logger
+        public: true
+    sentry_client_builder:
+        decorates: Sentry\ClientBuilderInterface
+        parent: Sentry\ClientBuilderInterface
+        calls:
+            - method: setTransport
+              arguments:
+                  - '@sentry_transport'
+    sentry_transport:
+        class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler\TestSentryTransport
+        public: true
+    sentry_client:
+        alias: Sentry\ClientInterface
+        public: true
+    dbal_logger:
+        decorates: doctrine.dbal.logger
+        parent: doctrine.dbal.logger
+        class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Logger\TestDbalLogger
+        public: true

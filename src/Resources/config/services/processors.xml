@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="paysera_logging_extra.processor.correlation_id"
+                 class="Paysera\LoggingExtraBundle\Service\Processor\CorrelationIdProcessor">
+            <tag name="monolog.processor"/>
+
+            <argument type="service" id="paysera_logging_extra.correlation_id_provider"/>
+        </service>
+
+        <service id="paysera_logging_extra.processor.introspection_processor"
+                 class="Monolog\Processor\IntrospectionProcessor">
+            <tag name="monolog.processor"/>
+
+            <argument>ERROR</argument>
+        </service>
+
+        <service id="paysera_logging_extra.processor.remove_root_prefix"
+                 class="Paysera\LoggingExtraBundle\Service\Processor\RemoveRootPrefixProcessor">
+            <tag name="monolog.processor"/>
+            <argument>%kernel.root_dir%/..</argument>
+        </service>
+
+        <service id="paysera_logging_extra.processor.sentry_context"
+                 class="Paysera\LoggingExtraBundle\Service\Processor\SentryContextProcessor">
+            <tag name="monolog.processor" handler="sentry"/>
+        </service>
+
+        <service id="paysera_logging_extra.processor.group_exceptions"
+                 class="Paysera\LoggingExtraBundle\Service\Processor\GroupExceptionsProcessor">
+            <tag name="monolog.processor" handler="sentry"/>
+
+            <argument>%paysera_logging_extra.grouped_exceptions%</argument>
+        </service>
+    </services>
+</container>

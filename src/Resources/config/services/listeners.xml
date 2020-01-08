@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="paysera_logging_extra.listener.iteration_end"
+                 class="Paysera\LoggingExtraBundle\Listener\IterationEndListener">
+            <argument type="service" id="paysera_logging_extra.correlation_id_provider"/>
+            <argument type="service" id="Sentry\ClientInterface" on-invalid="null"/>
+
+            <!-- listener tags are added in PayseraLoggingExtraExtension -->
+        </service>
+    </services>
+</container>

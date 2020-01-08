@@ -1,0 +1,54 @@
+monolog:
+    handlers:
+        info:
+            type: filter
+            accepted_levels: [INFO, NOTICE, WARNING]
+            handler: graylog_failsafe
+        debug_and_errors:
+            type: filter
+            accepted_levels: [DEBUG, ERROR, CRITICAL, ALERT, EMERGENCY]
+            handler: graylog_fingers_crossed
+        console:
+            type: console
+            process_psr_3_messages: false
+            channels: ["!event", "!doctrine"]
+        sentry:
+            type: service
+            id: Sentry\Monolog\Handler
+
+        graylog_fingers_crossed:
+            type: fingers_crossed
+            action_level: error
+            handler: graylog_failsafe
+            stop_buffering: false
+            buffer_size: 50
+            nested: true
+        graylog_failsafe:
+            type: whatfailuregroup
+            members: [graylog]
+            nested: true
+        graylog:
+            type: gelf
+            publisher:
+                hostname: 'non-existant'
+                port: '12312'
+                chunk_size: 8154
+            formatter: paysera_logging_extra.formatter.gelf_message
+            nested: true
+
+sentry:
+    dsn: 'http://user:password@non-existant:213/1'
+    register_error_listener: false
+    monolog:
+        error_handler:
+            enabled: true
+            level: error
+    options:
+        environment: '%kernel.environment%'
+        release: 'v123'
+        send_attempts: 1
+
+paysera_logging_extra:
+    application_name: test-application-name
+    grouped_exceptions:
+        - Doctrine\DBAL\ConnectionException
