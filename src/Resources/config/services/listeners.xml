@@ -12,5 +12,12 @@
 
             <!-- listener tags are added in PayseraLoggingExtraExtension -->
         </service>
+
+        <service id="paysera_logging_extra.listener.correlation_id"
+                 class="Paysera\LoggingExtraBundle\Listener\CorrelationIdListener">
+            <argument type="service" id="paysera_logging_extra.correlation_id_provider"/>
+
+            <tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse" />
+        </service>
     </services>
 </container>
