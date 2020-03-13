@@ -1,5 +1,7 @@
 framework:
     secret: 'secret'
+    router:
+        resource: '%kernel.root_dir%/config/routing.yml'
 
 doctrine:
     orm:
@@ -14,6 +16,9 @@ doctrine:
         charset: UTF8
 
 services:
+    test_controller:
+        class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Controller\TestController
+        public: true
     graylog_handler:
         parent: monolog.handler.graylog
         decorates: monolog.handler.graylog
@@ -42,4 +47,7 @@ services:
         decorates: doctrine.dbal.logger
         parent: doctrine.dbal.logger
         class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Logger\TestDbalLogger
+        public: true
+    public_correlation_id_provider:
+        alias: 'paysera_logging_extra.correlation_id_provider'
         public: true
