@@ -8,6 +8,12 @@ use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
 use Sentry\ClientInterface;
 use Sentry\FlushableClientInterface;
 
+/**
+ * Intended for cases where the same process is reused for separate job or request processing, like in PHPPM.
+ *
+ * Changes correlation_id while still maintaining same prefix to be able to find relations in cases of bugs happening
+ * due to shared state between different processing cycles
+ */
 class IterationEndListener
 {
     private $correlationIdProvider;
@@ -24,6 +30,8 @@ class IterationEndListener
     public function afterIteration()
     {
         $this->correlationIdProvider->incrementIdentifier();
-        $this->sentryClient->flush();
+        if ($this->sentryClient !== null) {
+            $this->sentryClient->flush();
+        }
     }
 }

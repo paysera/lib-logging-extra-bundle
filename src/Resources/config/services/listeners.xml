@@ -7,10 +7,11 @@
     <services>
         <service id="paysera_logging_extra.listener.iteration_end"
                  class="Paysera\LoggingExtraBundle\Listener\IterationEndListener">
+            <tag name="kernel.event_listener" method="afterIteration" event="console.terminate"/>
+            <tag name="kernel.event_listener" method="afterIteration" event="kernel.terminate"/>
+
             <argument type="service" id="paysera_logging_extra.correlation_id_provider"/>
             <argument type="service" id="Sentry\ClientInterface" on-invalid="null"/>
-
-            <!-- listener tags are added in PayseraLoggingExtraExtension -->
         </service>
 
         <service id="paysera_logging_extra.listener.correlation_id"
