@@ -24,12 +24,13 @@
         "symfony/monolog-bundle": "^3.4"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.5",
+        "doctrine/doctrine-bundle": "^1.4",
+        "doctrine/orm": "^2.5.14",
+        "doctrine/persistence": "^1.3",
         "mockery/mockery": "^1.2",
         "paysera/lib-php-cs-fixer-config": "^2.3",
-        "symfony/yaml": "^3.4.34|^4.3",
-        "doctrine/doctrine-bundle": "^1.4",
-        "doctrine/orm": "^2.5.14"
+        "phpunit/phpunit": "^6.5",
+        "symfony/yaml": "^3.4.34|^4.3"
     },
     "config": {
         "bin-dir": "bin",
