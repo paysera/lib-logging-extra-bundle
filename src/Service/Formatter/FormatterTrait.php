@@ -90,12 +90,6 @@ trait FormatterTrait
         return '[Uninitialized]';
     }
 
-    /**
-     * @param $data
-     * @param bool $ignoreErrors
-     *
-     * @return string
-     */
     protected function toJson($data, $ignoreErrors = false): string
     {
         return Utils::jsonEncode(
