@@ -16,7 +16,7 @@ use Throwable;
  */
 trait FormatterTrait
 {
-    protected function normalize($data, int $depth = 0)
+    protected function normalize($data, $depth = 0)
     {
         $prenormalizedData = $this->prenormalizeData($data, $depth);
 
@@ -90,7 +90,7 @@ trait FormatterTrait
         return '[Uninitialized]';
     }
 
-    protected function toJson($data, bool $ignoreErrors = false): string
+    protected function toJson($data, $ignoreErrors = false): string
     {
         return Utils::jsonEncode(
             $data,
