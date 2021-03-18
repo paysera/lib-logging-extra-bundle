@@ -96,7 +96,7 @@ trait FormatterTrait
      *
      * @return string
      */
-    protected function toJson($data, $ignoreErrors = false): string
+    protected function toJson($data, $ignoreErrors = false)
     {
         return Utils::jsonEncode(
             $data,
