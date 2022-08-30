@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2022-08-30
+### Fixed
+- Fixing deprecation error in symfony versions above 4.2
+
 ## [1.0.1] - 2021-03-18
 ### Changed
 - Removed strict types in `FormatterTrait` method parameters, allowing for `monolog/monolog:^1.24` compatibility
