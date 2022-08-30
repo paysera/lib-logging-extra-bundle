@@ -16,7 +16,7 @@ class Configuration implements ConfigurationInterface
             $rootNode = $treeBuilder->getRootNode();
         } else {
             $treeBuilder = new TreeBuilder();
-            $rootNode = $treeBuilder->Root('paysera_logging_extra');
+            $rootNode = $treeBuilder->root('paysera_logging_extra');
         }
 
         $children = $rootNode->children();
