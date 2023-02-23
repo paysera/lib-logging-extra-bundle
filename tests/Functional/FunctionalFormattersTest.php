@@ -37,7 +37,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
      */
     private $dbalLogger;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

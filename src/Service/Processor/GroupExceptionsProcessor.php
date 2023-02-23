@@ -6,6 +6,7 @@ namespace Paysera\LoggingExtraBundle\Service\Processor;
 
 use Monolog\Processor\ProcessorInterface;
 use Sentry\SentryBundle\SentryBundle;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
 /**
@@ -30,7 +31,7 @@ class GroupExceptionsProcessor implements ProcessorInterface
         $exceptionClass = get_class($exception);
 
         if (isset($this->exceptionsClassesToGroup[$exceptionClass])) {
-            SentryBundle::getCurrentHub()
+            SentrySdk::getCurrentHub()
                 ->configureScope(function (Scope $scope) use ($exceptionClass) {
                     $scope->setFingerprint([$exceptionClass]);
                 })
