@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="paysera_logging_extra.handler.sentry"
+                 class="Paysera\LoggingExtraBundle\Service\Handler\SentryExtraInformationHandler">
+            <argument type="service">
+                <service class="Sentry\Monolog\Handler">
+                    <argument type="service" id="Sentry\State\HubInterface"/>
+                    <argument type="constant">Monolog\Logger::ERROR</argument>
+                </service>
+            </argument>
+        </service>
+    </services>
+</container>

@@ -65,7 +65,6 @@ monolog:
         sentry:
             type: service
             id: paysera_logging_extra.sentry_handler
-
         graylog_fingers_crossed:
             type: fingers_crossed
             action_level: error

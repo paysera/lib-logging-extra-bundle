@@ -1,4 +1,4 @@
-# Upgrade 1.x to 2.0
+# Upgrade from 1.x to 2.0
 The `sentry/sentry-symfony` package is updated to ^4.0 which requires changes in the configuration if you use the recommended configuration:
 
 - Remove `sentry.monolog` configuration option  

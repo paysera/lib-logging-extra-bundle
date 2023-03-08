@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Paysera\LoggingExtraBundle\Monolog;
+namespace Paysera\LoggingExtraBundle\Service\Handler;
 
 use Monolog\Handler\HandlerWrapper;
 use Monolog\Handler\ProcessableHandlerTrait;
 use Sentry\State\Scope;
 use function Sentry\withScope;
 
-final class SentryHandler extends HandlerWrapper
+final class SentryExtraInformationHandler extends HandlerWrapper
 {
     use ProcessableHandlerTrait;
 

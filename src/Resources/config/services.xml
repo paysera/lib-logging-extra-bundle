@@ -14,14 +14,6 @@
             <argument>%paysera_logging_extra.application_name%</argument>
         </service>
 
-        <service id="paysera_logging_extra.sentry_handler"
-                 class="Paysera\LoggingExtraBundle\Monolog\SentryHandler">
-            <argument type="service">
-                <service class="Sentry\Monolog\Handler">
-                    <argument type="service" id="Sentry\State\HubInterface"/>
-                    <argument type="constant">Monolog\Logger::ERROR</argument>
-                </service>
-            </argument>
-        </service>
+        <service id="paysera_logging_extra.sentry_handler" alias="paysera_logging_extra.handler.sentry"/>
     </services>
 </container>
