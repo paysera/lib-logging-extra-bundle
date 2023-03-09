@@ -30,13 +30,10 @@ services:
     public_logger:
         alias: logger
         public: true
-    sentry_client_builder:
-        decorates: Sentry\ClientBuilderInterface
-        parent: Sentry\ClientBuilderInterface
-        calls:
-            - method: setTransport
-              arguments:
-                  - '@sentry_transport'
+    Sentry\Transport\TransportFactoryInterface:
+        class: \Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTransportFactory
+        arguments:
+            $transport: '@sentry_transport'
     sentry_transport:
         class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler\TestSentryTransport
         public: true

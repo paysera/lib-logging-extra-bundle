@@ -10,7 +10,7 @@ use Sentry\Event;
 use Sentry\Transport\ClosableTransportInterface;
 use Sentry\Transport\TransportInterface;
 
-class TestSentryTransport implements TransportInterface, ClosableTransportInterface
+class TestSentryTransport implements TransportInterface
 {
     private $pendingEvents;
     private $events;
@@ -23,10 +23,10 @@ class TestSentryTransport implements TransportInterface, ClosableTransportInterf
         $this->id = 0;
     }
 
-    public function send(Event $event): ?string
+    public function send(Event $event): PromiseInterface
     {
         $this->pendingEvents[] = $event;
-        return (string)$this->id++;
+        return new FulfilledPromise($this->id++);
     }
 
     public function close(?int $timeout = null): PromiseInterface

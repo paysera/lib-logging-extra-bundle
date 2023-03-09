@@ -6,7 +6,6 @@ namespace Paysera\LoggingExtraBundle\Listener;
 
 use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
 use Sentry\ClientInterface;
-use Sentry\FlushableClientInterface;
 
 /**
  * Intended for cases where the same process is reused for separate job or request processing, like in PHPPM.
@@ -24,7 +23,7 @@ class IterationEndListener
         ClientInterface $sentryClient = null
     ) {
         $this->correlationIdProvider = $correlationIdProvider;
-        $this->sentryClient = $sentryClient instanceof FlushableClientInterface ? $sentryClient : null;
+        $this->sentryClient = $sentryClient instanceof ClientInterface ? $sentryClient : null;
     }
 
     public function afterIteration()

@@ -40,7 +40,7 @@ class FunctionalHandlersTest extends FunctionalTestCase
      */
     private $logger;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -57,7 +57,7 @@ class FunctionalHandlersTest extends FunctionalTestCase
         $this->logger->error('Hello world', ['param1' => 'value1']);
 
         $event = $this->getSingleSentryEvent();
-        $this->assertArraySubset(['param1' => 'value1'], $event->getExtraContext());
+        $this->assertSame('value1', $event->getExtra()['param1'] ?? null);
     }
 
     public function testCorrelationId()
@@ -66,7 +66,7 @@ class FunctionalHandlersTest extends FunctionalTestCase
         $this->logger->info('info');
         $this->logger->error('error');
 
-        $correlationId = $this->getSingleSentryEvent()->getTagsContext()['correlation_id'];
+        $correlationId = $this->getSingleSentryEvent()->getTags()['correlation_id'];
         $this->assertStringStartsWith('test-application-name', $correlationId);
 
         $correlationIds = array_map(function (Message $message) {
@@ -99,13 +99,10 @@ class FunctionalHandlersTest extends FunctionalTestCase
             'Introspection works only for errors'
         );
 
-        $this->assertArraySubset(
-            [
-                'function' => 'testIntrospection',
-                'class' => __CLASS__,
-            ],
-            $messages[1]->getAllAdditionals()
-        );
+        $allAdditionals = $messages[1]->getAllAdditionals();
+
+        $this->assertSame('testIntrospection', $allAdditionals['function'] ?? null);
+        $this->assertSame(__CLASS__, $allAdditionals['class'] ?? null);
     }
 
     public function testExceptionGrouping()

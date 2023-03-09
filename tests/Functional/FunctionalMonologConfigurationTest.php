@@ -39,7 +39,7 @@ class FunctionalMonologConfigurationTest extends FunctionalTestCase
      */
     private $logger;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -135,7 +135,12 @@ class FunctionalMonologConfigurationTest extends FunctionalTestCase
             /** @var Message $message */
             $message = $publishedMessages[$i];
             $this->assertSame($expectation['message'], $message->getShortMessage());
-            $this->assertArraySubset($expectation['additionals'] ?? [], $message->getAllAdditionals());
+
+            $additionalsExpectation = $expectation['additionals'] ?? [];
+            foreach ($additionalsExpectation as $key => $value) {
+                $this->assertArrayHasKey($key, $message->getAllAdditionals());
+                $this->assertSame($value, $message->getAllAdditionals()[$key]);
+            }
 
             $this->assertSame('test-application-name', $message->getHost());
             $this->assertSame('app', $message->getFacility());
@@ -149,7 +154,12 @@ class FunctionalMonologConfigurationTest extends FunctionalTestCase
             /** @var Event $event */
             $event = $publishedEvents[$i];
             $this->assertSame($expectation['message'], $event->getMessage());
-            $this->assertArraySubset($expectation['additionals'], $event->getExtraContext()->toArray());
+
+            $additionalsExpectation = $expectation['additionals'] ?? [];
+            foreach ($additionalsExpectation as $key => $value) {
+                $this->assertArrayHasKey($key, $event->getExtra());
+                $this->assertSame($value, $event->getExtra()[$key]);
+            }
 
             $this->assertSame('monolog.app', $event->getLogger());
             $this->assertSame('v123', $event->getRelease());

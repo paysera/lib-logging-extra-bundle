@@ -64,8 +64,7 @@ monolog:
             channels: ["!event", "!doctrine"]
         sentry:
             type: service
-            id: Sentry\Monolog\Handler
-
+            id: paysera_logging_extra.sentry_handler
         graylog_fingers_crossed:
             type: fingers_crossed
             action_level: error
@@ -89,10 +88,8 @@ monolog:
 sentry:
     dsn: '%env(SENTRY_DSN)%'
     register_error_listener: false
-    monolog:
-        error_handler:
-            enabled: true
-            level: error
+    tracing:
+        enabled: false # If using self-hosted Sentry version < v20.6.0
     options:
         environment: '%kernel.environment%'
         release: '%env(VERSION)%' # your app version, optional
@@ -100,7 +97,6 @@ sentry:
 
 paysera_logging_extra:
   application_name: app-something   # customise this to know which project message was sent from
-
 ```
 
 ## Usage
@@ -140,11 +136,6 @@ composer test
 ## Contributing
 
 Feel free to create issues and give pull requests.
-
-You can fix any code style issues using this command:
-```
-composer fix-cs
-```
 
 ### Running dependencies locally
 

@@ -17,8 +17,7 @@ monolog:
             channels: ["!event", "!doctrine"]
         sentry:
             type: service
-            id: Sentry\Monolog\Handler
-
+            id: paysera_logging_extra.sentry_handler
         graylog_fingers_crossed:
             type: fingers_crossed
             action_level: error
@@ -42,10 +41,6 @@ monolog:
 sentry:
     dsn: '%env(SENTRY_DSN)%'
     register_error_listener: false
-    monolog:
-        error_handler:
-            enabled: true
-            level: error
     options:
         environment: '%kernel.environment%'
         release: 'v123'
