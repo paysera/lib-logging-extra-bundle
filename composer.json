@@ -1,6 +1,5 @@
 {
     "name": "paysera/lib-logging-extra-bundle",
-    "version": "2.1.0",
     "description": "Symfony bundle for further Monolog, Sentry and Graylog integration",
     "keywords": ["logging", "monolog", "sentry", "graylog", "log"],
     "type": "symfony-bundle",
