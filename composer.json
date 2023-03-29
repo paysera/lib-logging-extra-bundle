@@ -1,5 +1,6 @@
 {
     "name": "paysera/lib-logging-extra-bundle",
+    "version": "2.1.0",
     "description": "Symfony bundle for further Monolog, Sentry and Graylog integration",
     "keywords": ["logging", "monolog", "sentry", "graylog", "log"],
     "type": "symfony-bundle",
@@ -22,11 +23,11 @@
         "sentry/sdk": "^3.1",
         "sentry/sentry": "^3.1",
         "sentry/sentry-symfony": "^4.0",
-        "symfony/config": "^3.4|^4.0",
-        "symfony/dependency-injection": "^3.4|^4.0",
-        "symfony/framework-bundle": "^3.4.26|^4.2.7",
-        "symfony/http-kernel": "^3.4|^4.0",
-        "symfony/monolog-bundle": "^3.4"
+        "symfony/config": "^3.4|^4.0|^5.0",
+        "symfony/dependency-injection": "^3.4|^4.0|^5.0",
+        "symfony/framework-bundle": "^3.4.26|^4.2.7|^5.0",
+        "symfony/http-kernel": "^3.4|^4.0|^5.0",
+        "symfony/monolog-bundle": "^3.4|^5.0"
     },
     "require-dev": {
         "doctrine/annotations": "^1.14",
@@ -37,7 +38,10 @@
     },
     "config": {
         "bin-dir": "bin",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "scripts": {
         "phpunit": "phpunit",
