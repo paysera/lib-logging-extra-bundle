@@ -38,10 +38,7 @@
     },
     "config": {
         "bin-dir": "bin",
-        "sort-packages": true,
-        "allow-plugins": {
-            "php-http/discovery": true
-        }
+        "sort-packages": true
     },
     "scripts": {
         "phpunit": "phpunit",
