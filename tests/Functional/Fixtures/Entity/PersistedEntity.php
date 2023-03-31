@@ -17,41 +17,34 @@ class PersistedEntity
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      * @ORM\Column(type="integer")
-     * @var int|null
      */
-    private $id;
+    private ?int $id;
 
     /**
      * @var string|null
      * @ORM\Column(type="string")
      */
-    private $field;
+    private ?string $field;
 
     /**
-     * @var PersistedEntity|null
      * @ORM\ManyToOne(targetEntity="PersistedEntity")
      */
-    private $parent;
+    private ?PersistedEntity $parent;
 
     /**
-     * @var PersistedEntity[]|Collection
      * @ORM\OneToMany(targetEntity="PersistedEntity", cascade={"all"}, mappedBy="parent")
      */
-    private $children;
+    private array|Collection|ArrayCollection $children;
 
     public function __construct()
     {
         $this->children = new ArrayCollection();
     }
 
-    public function getField(): string
-    {
-        return $this->field;
-    }
-
     public function setField(string $field): self
     {
         $this->field = $field;
+
         return $this;
     }
 
@@ -68,6 +61,7 @@ class PersistedEntity
     public function setParent(?self $parent): self
     {
         $this->parent = $parent;
+
         return $this;
     }
 
@@ -80,6 +74,7 @@ class PersistedEntity
     {
         $this->children[] = $child;
         $child->setParent($this);
+
         return $this;
     }
 }

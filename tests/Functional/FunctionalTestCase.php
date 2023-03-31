@@ -9,7 +9,6 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\TestKernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\DependencyInjection\ResettableContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,30 +16,19 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 abstract class FunctionalTestCase extends TestCase
 {
-    /**
-     * @var TestKernel
-     */
-    protected $kernel;
+    protected TestKernel $kernel;
 
-    /**
-     * @param string $testCase
-     * @param string $commonFile
-     * @return ContainerInterface
-     */
-    protected function setUpContainer($testCase, $commonFile = 'common.yml')
+    protected function setUpContainer(string $testCase, string $commonFile = 'common.yml'): ContainerInterface
     {
         $this->kernel = new TestKernel($testCase, $commonFile);
         $this->kernel->boot();
+
         return $this->kernel->getContainer();
     }
 
     protected function tearDown(): void
     {
-        $container = $this->kernel->getContainer();
         $this->kernel->shutdown();
-        if ($container instanceof ResettableContainerInterface) {
-            $container->reset();
-        }
         $filesystem = new Filesystem();
         $filesystem->remove($this->kernel->getCacheDir());
     }
@@ -78,7 +66,7 @@ abstract class FunctionalTestCase extends TestCase
         }
     }
 
-    protected function setUpDatabase()
+    protected function setUpDatabase(): void
     {
         $entityManager = $this->getEntityManager();
         $metadata = $entityManager->getMetadataFactory()->getAllMetadata();

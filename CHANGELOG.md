@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2023-03-31
+### Removed
+- Dropped support for versions below PHP 8.1 and Symfony 5.
+- Root prefix processor as messages can no longer be altered as the record is now an entity instead of array, and the `message` field is read-only.
+### Changed
+- Changed some logic to fit the new versions of the used libraries.
+
 ## [2.1.0] - 2023-03-29
 ### Added
 - Added Symfony ^5 support.

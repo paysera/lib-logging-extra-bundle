@@ -9,10 +9,7 @@ use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
 
 class FunctionalCorrelationIdListenerTest extends FunctionalTestCase
 {
-    /**
-     * @var CorrelationIdProvider
-     */
-    private $correlationIdProvider;
+    private CorrelationIdProvider $correlationIdProvider;
 
     protected function setUp(): void
     {
@@ -22,11 +19,11 @@ class FunctionalCorrelationIdListenerTest extends FunctionalTestCase
         $this->correlationIdProvider = $container->get('public_correlation_id_provider');
     }
 
-    public function testResponseHeaders()
+    public function testResponseHeaders(): void
     {
         $response = $this->makeGetRequest('/index');
-        $this->assertTrue($response->headers->has(CorrelationIdListener::HEADER_NAME));
-        $this->assertEquals(
+        static::assertTrue($response->headers->has(CorrelationIdListener::HEADER_NAME));
+        static::assertEquals(
             $response->headers->get(CorrelationIdListener::HEADER_NAME),
             $this->correlationIdProvider->getCorrelationId()
         );

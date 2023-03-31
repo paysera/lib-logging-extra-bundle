@@ -15,22 +15,18 @@ use Sentry\ClientInterface;
  */
 class IterationEndListener
 {
-    private $correlationIdProvider;
-    private $sentryClient;
+    private ?ClientInterface $sentryClient;
 
     public function __construct(
-        CorrelationIdProvider $correlationIdProvider,
+        private CorrelationIdProvider $correlationIdProvider,
         ClientInterface $sentryClient = null
     ) {
-        $this->correlationIdProvider = $correlationIdProvider;
         $this->sentryClient = $sentryClient instanceof ClientInterface ? $sentryClient : null;
     }
 
-    public function afterIteration()
+    public function afterIteration(): void
     {
         $this->correlationIdProvider->incrementIdentifier();
-        if ($this->sentryClient !== null) {
-            $this->sentryClient->flush();
-        }
+        $this->sentryClient?->flush();
     }
 }

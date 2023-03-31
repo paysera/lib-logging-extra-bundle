@@ -7,14 +7,13 @@ namespace Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\Event;
-use Sentry\Transport\ClosableTransportInterface;
 use Sentry\Transport\TransportInterface;
 
 class TestSentryTransport implements TransportInterface
 {
-    private $pendingEvents;
-    private $events;
-    private $id;
+    private array $pendingEvents;
+    private array $events;
+    private int $id;
 
     public function __construct()
     {
@@ -37,7 +36,7 @@ class TestSentryTransport implements TransportInterface
         return new FulfilledPromise(true);
     }
 
-    public function getEvents()
+    public function getEvents(): array
     {
         return $this->events;
     }

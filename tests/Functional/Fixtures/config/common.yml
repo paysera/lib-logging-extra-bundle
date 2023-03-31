@@ -1,13 +1,13 @@
 framework:
     secret: 'secret'
     router:
-        resource: '%kernel.root_dir%/config/routing.yml'
+        resource: '%kernel.project_dir%/tests/Functional/Fixtures/config/routes.yml'
 
 doctrine:
     orm:
         mappings:
             main:
-                dir: "%kernel.root_dir%/Entity"
+                dir: "%kernel.project_dir%/tests/Functional/Fixtures/Entity"
                 prefix: "Paysera\\LoggingExtraBundle\\Tests\\Functional\\Fixtures\\Entity"
                 type: annotation
     dbal:
@@ -30,21 +30,22 @@ services:
     public_logger:
         alias: logger
         public: true
-    Sentry\Transport\TransportFactoryInterface:
-        class: \Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTransportFactory
-        arguments:
-            $transport: '@sentry_transport'
     sentry_transport:
         class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler\TestSentryTransport
         public: true
+    Sentry\Transport\TransportFactoryInterface:
+        class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTransportFactory
+        arguments:
+            - '@sentry_transport'
     sentry_client:
         alias: Sentry\ClientInterface
         public: true
     dbal_logger:
-        decorates: doctrine.dbal.logger
-        parent: doctrine.dbal.logger
         class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Logger\TestDbalLogger
         public: true
     public_correlation_id_provider:
         alias: 'paysera_logging_extra.correlation_id_provider'
+        public: true
+    annotation_reader:
+        class: Doctrine\Common\Annotations\AnnotationReader
         public: true

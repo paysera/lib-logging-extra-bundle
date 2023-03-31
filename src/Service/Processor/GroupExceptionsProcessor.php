@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 namespace Paysera\LoggingExtraBundle\Service\Processor;
 
+use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
-use Sentry\SentryBundle\SentryBundle;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
-/**
- * @php-cs-fixer-ignore Paysera/php_basic_code_style_chained_method_calls
- */
 class GroupExceptionsProcessor implements ProcessorInterface
 {
-    private $exceptionsClassesToGroup;
+    private array $exceptionsClassesToGroup;
 
     public function __construct(array $exceptionsClassesToGroup)
     {
         $this->exceptionsClassesToGroup = array_flip($exceptionsClassesToGroup);
     }
 
-    public function __invoke(array $record)
+    public function __invoke(LogRecord $record): LogRecord
     {
         if (!isset($record['context']['exception'])) {
             return $record;

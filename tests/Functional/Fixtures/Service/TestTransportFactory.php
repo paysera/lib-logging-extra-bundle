@@ -10,14 +10,8 @@ use Sentry\Transport\TransportInterface;
 
 class TestTransportFactory implements TransportFactoryInterface
 {
-    /**
-     * @var TransportInterface
-     */
-    private $transport;
-
-    public function __construct(TransportInterface $transport)
+    public function __construct(private TransportInterface $transport)
     {
-        $this->transport = $transport;
     }
 
     public function create(Options $options): TransportInterface
