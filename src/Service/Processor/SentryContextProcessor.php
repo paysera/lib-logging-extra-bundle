@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Paysera\LoggingExtraBundle\Service\Processor;
 
+use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
 class SentryContextProcessor implements ProcessorInterface
 {
-    public function __invoke(array $record)
+    public function __invoke(LogRecord $record): LogRecord
     {
         $record['context']['extra'] = ($record['context']['extra'] ?? []) + $record['extra'] + $record['context'];
         if (isset($record['extra']['correlation_id'])) {
@@ -16,6 +17,7 @@ class SentryContextProcessor implements ProcessorInterface
         }
         unset($record['context']['extra']['tags']);
         unset($record['context']['extra']['exception']);
+
         return $record;
     }
 }

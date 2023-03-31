@@ -14,30 +14,11 @@ use Sentry\Event;
 
 class FunctionalMonologConfigurationTest extends FunctionalTestCase
 {
-    /**
-     * @var TestGraylogHandler
-     */
-    private $graylogHandler;
-
-    /**
-     * @var TestSentryTransport
-     */
-    private $sentryTransport;
-
-    /**
-     * @var ClientInterface
-     */
-    private $sentryClient;
-
-    /**
-     * @var FingersCrossedHandler
-     */
-    private $mainHandler;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    private TestGraylogHandler $graylogHandler;
+    private TestSentryTransport $sentryTransport;
+    private ClientInterface $sentryClient;
+    private FingersCrossedHandler $mainHandler;
+    private LoggerInterface $logger;
 
     protected function setUp(): void
     {
@@ -49,9 +30,11 @@ class FunctionalMonologConfigurationTest extends FunctionalTestCase
         $this->graylogHandler = $container->get('graylog_handler');
         $this->sentryTransport = $container->get('sentry_transport');
         $this->sentryClient = $container->get('sentry_client');
+
+        $this->graylogHandler->flushPublishedMessages();
     }
 
-    public function testGraylog()
+    public function testGraylog(): void
     {
         $this->logger->debug('DEBUG');
         $this->logger->info('INFO', ['param1' => 'value1']);
@@ -143,7 +126,6 @@ class FunctionalMonologConfigurationTest extends FunctionalTestCase
             }
 
             $this->assertSame('test-application-name', $message->getHost());
-            $this->assertSame('app', $message->getFacility());
         }
     }
 

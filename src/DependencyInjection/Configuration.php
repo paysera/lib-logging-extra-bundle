@@ -9,15 +9,10 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
-        if (method_exists(TreeBuilder::class, 'getRootNode')) {
-            $treeBuilder = new TreeBuilder('paysera_logging_extra');
-            $rootNode = $treeBuilder->getRootNode();
-        } else {
-            $treeBuilder = new TreeBuilder();
-            $rootNode = $treeBuilder->root('paysera_logging_extra');
-        }
+        $treeBuilder = new TreeBuilder('paysera_logging_extra');
+        $rootNode = $treeBuilder->getRootNode();
 
         $children = $rootNode->children();
         $children->scalarNode('application_name')->isRequired();

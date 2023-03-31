@@ -5,25 +5,21 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Service\Formatter;
 
 use DateTimeInterface;
-use Doctrine\Common\Persistence\Proxy as LegacyProxy;
 use Doctrine\Persistence\Proxy;
 use Doctrine\ORM\PersistentCollection;
 use Monolog\Utils;
 use Throwable;
 
-/**
- * To be used on classes extending NormalizerFormatter
- */
 trait FormatterTrait
 {
-    protected function normalize($data, $depth = 0)
+    protected function normalize(mixed $data, $depth = 0): mixed
     {
-        $prenormalizedData = $this->prenormalizeData($data, $depth);
+        $prenormalizedData = $this->preNormalizeData($data, $depth);
 
         return parent::normalize($prenormalizedData, $depth);
     }
 
-    private function prenormalizeData($data, $depth)
+    private function preNormalizeData($data, $depth)
     {
         if ($depth > 2) {
             return $this->getScalarRepresentation($data);
@@ -33,7 +29,7 @@ trait FormatterTrait
             return $data->isInitialized() ? iterator_to_array($data) : get_class($data);
         }
 
-        if ($data instanceof Proxy || $data instanceof LegacyProxy) {
+        if ($data instanceof Proxy) {
             return $this->normalizeProxy($data);
         }
 
@@ -48,7 +44,7 @@ trait FormatterTrait
         return $data;
     }
 
-    private function getScalarRepresentation($data)
+    private function getScalarRepresentation(mixed $data): mixed
     {
         if (is_scalar($data) || $data === null) {
             return $data;
@@ -61,13 +57,13 @@ trait FormatterTrait
         return gettype($data);
     }
 
-    private function normalizeObject($data)
+    private function normalizeObject(mixed $data): array
     {
         $result = [];
         foreach ((array)$data as $key => $value) {
             $parts = explode("\0", $key);
             $fixedKey = end($parts);
-            if (substr($fixedKey, 0, 2) === '__') {
+            if (str_starts_with($fixedKey, '__')) {
                 continue;
             }
 
@@ -77,7 +73,7 @@ trait FormatterTrait
         return $result;
     }
 
-    private function normalizeProxy(Proxy $data)
+    private function normalizeProxy(Proxy $data): array|string
     {
         if ($data->__isInitialized()) {
             return $this->normalizeObject($data);

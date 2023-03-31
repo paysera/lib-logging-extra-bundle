@@ -19,12 +19,6 @@
             <argument>ERROR</argument>
         </service>
 
-        <service id="paysera_logging_extra.processor.remove_root_prefix"
-                 class="Paysera\LoggingExtraBundle\Service\Processor\RemoveRootPrefixProcessor">
-            <tag name="monolog.processor"/>
-            <argument>%kernel.root_dir%/..</argument>
-        </service>
-
         <service id="paysera_logging_extra.processor.sentry_context"
                  class="Paysera\LoggingExtraBundle\Service\Processor\SentryContextProcessor">
             <tag name="monolog.processor" handler="sentry"/>

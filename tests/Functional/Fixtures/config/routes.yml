@@ -1,0 +1,3 @@
+docs:
+    path: /index
+    controller: test_controller:index

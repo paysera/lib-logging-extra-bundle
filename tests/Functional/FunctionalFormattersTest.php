@@ -12,30 +12,12 @@ use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler\TestGraylogHand
 use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Logger\TestDbalLogger;
 use Psr\Log\LoggerInterface;
 
-/**
- * @php-cs-fixer-ignore Paysera/php_basic_code_style_splitting_in_several_lines
- */
 class FunctionalFormattersTest extends FunctionalTestCase
 {
-    /**
-     * @var TestGraylogHandler
-     */
-    private $graylogHandler;
-
-    /**
-     * @var FingersCrossedHandler
-     */
-    private $mainHandler;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var TestDbalLogger
-     */
-    private $dbalLogger;
+    private TestGraylogHandler $graylogHandler;
+    private FingersCrossedHandler $mainHandler;
+    private LoggerInterface $logger;
+    private TestDbalLogger $dbalLogger;
 
     protected function setUp(): void
     {
@@ -48,7 +30,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
         $this->dbalLogger = $container->get('dbal_logger');
     }
 
-    public function testWithDoctrineEntity()
+    public function testWithDoctrineEntity(): void
     {
         $this->setUpDatabase();
 
@@ -83,6 +65,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
         $manager->persist($entity);
         $manager->flush();
         $manager->clear();
+        $this->graylogHandler->flushPublishedMessages();
 
         /** @var PersistedEntity $child */
         $child = $manager->find(PersistedEntity::class, $child->getId());
@@ -120,9 +103,9 @@ class FunctionalFormattersTest extends FunctionalTestCase
         $messages = $this->assertWithoutQueries(function () {
             return $this->getGraylogMessages();
         });
-        $this->assertCount(5, $messages, 'Probably an error in normalization');
+        static::assertCount(5, $messages, 'Probably an error in normalization');
 
-        $this->assertSame(
+        static::assertSame(
             json_encode([
                 'id' => 6,
                 'field' => '1.2',
@@ -131,13 +114,13 @@ class FunctionalFormattersTest extends FunctionalTestCase
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             $messages[0]->getAdditional('ctxt_entity')
         );
-        $this->assertSame(
+        static::assertSame(
             json_encode([
                 'id' => 1,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             $messages[1]->getAdditional('ctxt_entity')
         );
-        $this->assertSame(
+        static::assertSame(
             json_encode([
                 'id' => 1,
                 'field' => 'Modified',
@@ -146,7 +129,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             $messages[2]->getAdditional('ctxt_entity')
         );
-        $this->assertSame(
+        static::assertSame(
             json_encode([
                 'id' => 1,
                 'field' => 'Modified',
@@ -158,7 +141,7 @@ class FunctionalFormattersTest extends FunctionalTestCase
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             $messages[3]->getAdditional('ctxt_entity')
         );
-        $this->assertSame(
+        static::assertSame(
             json_encode([
                 'id' => 6,
                 'field' => '1.2',
@@ -180,14 +163,16 @@ class FunctionalFormattersTest extends FunctionalTestCase
     private function getGraylogMessages(): array
     {
         $this->mainHandler->close();
+
         return $this->graylogHandler->flushPublishedMessages();
     }
 
-    private function assertWithoutQueries(Closure $closure)
+    private function assertWithoutQueries(Closure $closure): mixed
     {
         $count = $this->dbalLogger->getQueryCount();
         $result = $closure();
-        $this->assertSame($count, $this->dbalLogger->getQueryCount(), 'No queries must be made by logger');
+        static::assertSame($count, $this->dbalLogger->getQueryCount(), 'No queries must be made by logger');
+
         return $result;
     }
 }

@@ -1,3 +1,0 @@
-docs:
-    path:      /index
-    defaults:  { _controller: test_controller:index, path: '/' }
