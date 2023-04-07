@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Service\Processor;
 
 use Monolog\Processor\ProcessorInterface;
-use Sentry\SentryBundle\SentryBundle;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
