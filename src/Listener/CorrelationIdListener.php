@@ -37,6 +37,7 @@ if (class_exists(LegacyResponseEvent::class)) {
     class CorrelationIdListener
     {
         public const HEADER_NAME = 'Paysera-Correlation-Id';
+
         private $correlationIdProvider;
 
         public function __construct(CorrelationIdProvider $correlationIdProvider)
