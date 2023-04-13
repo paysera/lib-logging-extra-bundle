@@ -81,7 +81,7 @@ class FunctionalHandlersTest extends FunctionalTestCase
         $this->logger->error(sprintf('Hey from %s. Over', __FILE__));
 
         $this->assertSame(
-            'Hey from <root>/FunctionalHandlersTest.php. Over',
+            'Hey from <root>/tests/Functional/FunctionalHandlersTest.php. Over',
             $this->getSingleSentryEvent()->getMessage()
         );
     }

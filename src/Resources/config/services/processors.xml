@@ -22,7 +22,9 @@
         <service id="paysera_logging_extra.processor.remove_root_prefix"
                  class="Paysera\LoggingExtraBundle\Service\Processor\RemoveRootPrefixProcessor">
             <tag name="monolog.processor"/>
-            <argument>%kernel.root_dir%/..</argument>
+            <argument type="expression">
+                container.hasParameter('kernel.project_dir') ? (parameter('kernel.project_dir')) : (parameter('kernel.root_dir') ~ '/..')
+            </argument>
         </service>
 
         <service id="paysera_logging_extra.processor.sentry_context"
