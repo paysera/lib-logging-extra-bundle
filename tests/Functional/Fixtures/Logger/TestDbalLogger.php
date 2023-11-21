@@ -13,7 +13,7 @@ class TestDbalLogger extends DbalLogger
 {
     private $queryCount = 0;
 
-    public function startQuery($sql, array $params = null, array $types = null)
+    public function startQuery($sql, array $params = null, array $types = null): void
     {
         parent::startQuery($sql, $params, $types);
         $this->queryCount++;

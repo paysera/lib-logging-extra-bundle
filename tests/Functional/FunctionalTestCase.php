@@ -10,6 +10,7 @@ use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\TestKernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\ResettableContainerInterface;
+use Symfony\Contracts\Service\ResetInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,7 +39,10 @@ abstract class FunctionalTestCase extends TestCase
     {
         $container = $this->kernel->getContainer();
         $this->kernel->shutdown();
-        if ($container instanceof ResettableContainerInterface) {
+        if (
+            $container instanceof ResettableContainerInterface
+            || $container instanceof ResetInterface
+        ) {
             $container->reset();
         }
         $filesystem = new Filesystem();
