@@ -16,7 +16,7 @@ class TestKernel extends Kernel
         parent::__construct('dev', true);
     }
 
-    public function registerBundles()
+    public function registerBundles(): array
     {
         return [
             new FrameworkBundle(),
