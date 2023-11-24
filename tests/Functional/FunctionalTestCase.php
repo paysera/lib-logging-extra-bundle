@@ -39,10 +39,7 @@ abstract class FunctionalTestCase extends TestCase
     {
         $container = $this->kernel->getContainer();
         $this->kernel->shutdown();
-        if (
-            $container instanceof ResettableContainerInterface
-            || $container instanceof ResetInterface
-        ) {
+        if ($container instanceof ResettableContainerInterface || $container instanceof ResetInterface) {
             $container->reset();
         }
         $filesystem = new Filesystem();
