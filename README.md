@@ -18,6 +18,7 @@ the following features:
 - allows grouping some exceptions by their class, independently from where they were thrown at or what are their message;
 - removes root prefix from messages (usually included in some exception messages);
 - maps context to be available with logged sentry event. 
+- allows sharing the same correlation_id across multiple services via an HTTP header
 
 Also recommended configuration is given to allow nice synergy between Graylog and Sentry.
 
@@ -97,6 +98,13 @@ sentry:
 
 paysera_logging_extra:
   application_name: app-something   # customise this to know which project message was sent from
+
+# Enable sharing correlation ID between requests if needed
+Paysera\LoggingExtraBundle\Service\CorrelationIdHttpClientDecorator:
+  decorates: http_client
+  arguments:
+    - '@paysera_logging_extra.correlation_id_provider'
+    - '@.inner'
 ```
 
 ## Usage

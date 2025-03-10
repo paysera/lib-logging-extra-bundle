@@ -8,15 +8,22 @@ class CorrelationIdProvider
 {
     private $correlationId;
     private $increment;
+    private $correlationIdFromHeaderExtractor;
 
-    public function __construct(string $systemName)
+    public function __construct(string $systemName, CorrelationIdFromHeaderExtractor $correlationIdFromHeaderExtractor)
     {
         $this->correlationId = uniqid($systemName, true);
         $this->increment = 0;
+        $this->correlationIdFromHeaderExtractor = $correlationIdFromHeaderExtractor;
     }
 
     public function getCorrelationId(): string
     {
+        $correlationIdFromHeader = $this->correlationIdFromHeaderExtractor->getCorrelationId();
+        if ($correlationIdFromHeader !== null) {
+            return $correlationIdFromHeader;
+        }
+
         if ($this->increment === 0) {
             return $this->correlationId;
         }
