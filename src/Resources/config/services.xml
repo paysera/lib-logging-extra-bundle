@@ -11,6 +11,7 @@
     <services>
         <service id="paysera_logging_extra.correlation_id_from_header_extractor"
                  class="Paysera\LoggingExtraBundle\Service\CorrelationIdFromHeaderExtractor">
+            <argument type="service" id="request_stack"></argument>
         </service>
 
         <service id="paysera_logging_extra.correlation_id_provider"
