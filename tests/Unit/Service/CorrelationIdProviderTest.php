@@ -19,7 +19,8 @@ class CorrelationIdProviderTest extends TestCase
         $this->correlationIdFromHeaderExtractor = $this->createMock(CorrelationIdFromHeaderExtractor::class);
         $this->correlationIdProvider = new CorrelationIdProvider(
             'test-system',
-            $this->correlationIdFromHeaderExtractor
+            $this->correlationIdFromHeaderExtractor,
+            false
         );
     }
 
@@ -43,9 +44,15 @@ class CorrelationIdProviderTest extends TestCase
 
     public function testGetCorrelationIdFromRequestHeader(): void
     {
+        $correlationIdProvider = new CorrelationIdProvider(
+            'test-system',
+            $this->correlationIdFromHeaderExtractor,
+            true
+        );
+
         $this->correlationIdFromHeaderExtractor->method('getCorrelationId')->willReturn('test-correlation-id');
 
-        $correlationId = $this->correlationIdProvider->getCorrelationId();
+        $correlationId = $correlationIdProvider->getCorrelationId();
         $this->assertEquals(
             'test-correlation-id',
             $correlationId,
