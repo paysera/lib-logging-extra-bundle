@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Service\Processor;
 
 use Monolog\Processor\ProcessorInterface;
-use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
+use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider\CorrelationIdProvider;
 
 class CorrelationIdProcessor implements ProcessorInterface
 {

@@ -98,7 +98,7 @@ sentry:
 
 paysera_logging_extra:
   application_name: app-something   # customize this to know which project message was sent from
-  fetch_correlation_id_from_header: true # try to fetch correlation id from request header. false by default
+  fetch_correlation_id_from_request: true # try to fetch correlation id from request header. false by default
 
 # Enable sharing correlation ID between requests if needed
 Paysera\LoggingExtraBundle\Service\CorrelationIdHttpClientDecorator:

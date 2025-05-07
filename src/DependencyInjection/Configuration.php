@@ -22,7 +22,7 @@ class Configuration implements ConfigurationInterface
         $children = $rootNode->children();
         $children->scalarNode('application_name')->isRequired();
         $children->arrayNode('grouped_exceptions')->prototype('scalar');
-        $children->booleanNode('fetch_correlation_id_from_header')->defaultFalse();
+        $children->booleanNode('fetch_correlation_id_from_request')->defaultFalse();
 
         return $treeBuilder;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Service;
 
 use Paysera\LoggingExtraBundle\Listener\CorrelationIdListener;
+use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider\CorrelationIdProvider;
 use Symfony\Component\HttpClient\DecoratorTrait;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
