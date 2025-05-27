@@ -33,7 +33,7 @@
         "doctrine/annotations": "^1.14",
         "doctrine/doctrine-bundle": "~2.6.0",
         "doctrine/orm": "^2.10",
-        "phpunit/phpunit": "^8.5",
+        "phpunit/phpunit": "^9.5",
         "symfony/yaml": "^4.3|^5.0|^6.0"
     },
     "config": {
