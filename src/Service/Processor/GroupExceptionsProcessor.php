@@ -13,7 +13,7 @@ use Sentry\State\Scope;
  */
 class GroupExceptionsProcessor implements ProcessorInterface
 {
-    private $exceptionsClassesToGroup;
+    private array $exceptionsClassesToGroup;
 
     public function __construct(array $exceptionsClassesToGroup)
     {

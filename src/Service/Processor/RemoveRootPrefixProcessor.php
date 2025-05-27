@@ -9,14 +9,15 @@ use InvalidArgumentException;
 
 class RemoveRootPrefixProcessor implements ProcessorInterface
 {
-    private $rootPrefix;
+    private string $rootPrefix;
 
     public function __construct(string $rootPrefix)
     {
-        $this->rootPrefix = realpath($rootPrefix);
-        if ($this->rootPrefix === false) {
+        $realPath = realpath($rootPrefix);
+        if ($realPath === false) {
             throw new InvalidArgumentException('Invalid root prefix specified');
         }
+        $this->rootPrefix = $realPath;
     }
 
     public function __invoke(array $record)

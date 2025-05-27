@@ -6,8 +6,8 @@ namespace Paysera\LoggingExtraBundle\Service;
 
 class CorrelationIdProvider
 {
-    private $correlationId;
-    private $increment;
+    private string $correlationId;
+    private int $increment;
 
     public function __construct(string $systemName)
     {

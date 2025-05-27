@@ -9,7 +9,7 @@ use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
 
 class CorrelationIdProcessor implements ProcessorInterface
 {
-    private $correlationIdProvider;
+    private CorrelationIdProvider $correlationIdProvider;
 
     public function __construct(CorrelationIdProvider $correlationIdProvider)
     {
