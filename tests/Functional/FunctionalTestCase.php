@@ -65,6 +65,7 @@ abstract class FunctionalTestCase extends TestCase
             'REQUEST_METHOD' => $method,
             'HTTP_PHP_AUTH_USER' => $username,
             'HTTP_PHP_AUTH_PW' => $username !== null ? 'pass' : null,
+            'REMOTE_ADDR' => '127.0.0.1',
         ]), $content);
         $request->headers->add($headers);
         return $request;
