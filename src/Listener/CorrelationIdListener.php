@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Paysera\LoggingExtraBundle\Listener;
 
-use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
+use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider\CorrelationIdProvider;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent as LegacyResponseEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;

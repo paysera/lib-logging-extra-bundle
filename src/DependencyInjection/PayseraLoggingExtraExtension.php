@@ -21,5 +21,6 @@ class PayseraLoggingExtraExtension extends Extension
 
         $container->setParameter('paysera_logging_extra.application_name', $config['application_name']);
         $container->setParameter('paysera_logging_extra.grouped_exceptions', $config['grouped_exceptions']);
+        $container->setParameter('paysera_logging_extra.fetch_correlation_id_from_request', $config['fetch_correlation_id_from_request']);
     }
 }

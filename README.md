@@ -17,7 +17,8 @@ the following features:
 - adds correlation_id to correlate messages in Sentry with messages in Graylog from the same process;
 - allows grouping some exceptions by their class, independently from where they were thrown at or what are their message;
 - removes root prefix from messages (usually included in some exception messages);
-- maps context to be available with logged sentry event. 
+- maps context to be available with logged sentry event.
+- allows sharing the same correlation_id across multiple services via an HTTP header
 
 Also recommended configuration is given to allow nice synergy between Graylog and Sentry.
 
@@ -96,7 +97,15 @@ sentry:
         send_attempts: 1
 
 paysera_logging_extra:
-  application_name: app-something   # customise this to know which project message was sent from
+  application_name: app-something   # customize this to know which project message was sent from
+  fetch_correlation_id_from_request: true # try to fetch correlation id from request header. false by default
+
+# Enable sharing correlation ID between requests if needed
+Paysera\LoggingExtraBundle\Service\CorrelationIdHttpClientDecorator:
+  decorates: http_client
+  arguments:
+    - '@paysera_logging_extra.correlation_id_provider'
+    - '@.inner'
 ```
 
 ## Usage
@@ -145,7 +154,7 @@ docker-compose up -d
 docker-compose exec sentry sentry upgrade
 ```
 
-You'll find Graylog at [http://localhost:9001/](http://localhost:9001/) and Sentry at 
+You'll find Graylog at [http://localhost:9001/](http://localhost:9001/) and Sentry at
 [http://localhost:9002/](http://localhost:9002/).
 
 Open Graylog, login with `admin` `admin`, choose `System` -> `Inputs` -> `GELF UDP` -> `Launch new input` ->
@@ -166,7 +175,7 @@ php test.php
 ```
 
 View logged data in Graylog and Sentry instances. Change the code for further
-test scenarios or just use Graylog and Sentry to set-up and test your real 
+test scenarios or just use Graylog and Sentry to set-up and test your real
 project.
 
 Cleanup afterwards:

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Tests\Functional;
 
 use Paysera\LoggingExtraBundle\Listener\CorrelationIdListener;
-use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
+use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider\CorrelationIdProvider;
 
 class FunctionalCorrelationIdListenerTest extends FunctionalTestCase
 {
