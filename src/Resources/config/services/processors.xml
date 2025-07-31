@@ -16,7 +16,7 @@
                  class="Monolog\Processor\IntrospectionProcessor">
             <tag name="monolog.processor"/>
 
-            <argument>ERROR</argument>
+            <argument type="string">%paysera_logging_extra.monolog.minimum_introspection_level%</argument>
         </service>
 
         <service id="paysera_logging_extra.processor.remove_root_prefix"

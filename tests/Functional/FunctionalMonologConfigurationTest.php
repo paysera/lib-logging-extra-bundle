@@ -114,10 +114,20 @@ class FunctionalMonologConfigurationTest extends FunctionalTestCase
         $this->assertEmpty($this->sentryTransport->getEvents());
         $this->sentryClient->flush();
         $this->assertSameSentryEvents([
-            ['message' => 'Hello world', 'additionals' => [
-                'monolog.channel' => 'app',
-                'monolog.level' => 'ERROR',
-            ]],
+            [
+                'message' => 'Hello world',
+                'additionals' => [
+                    'monolog.channel' => 'app',
+                    'monolog.level' => 'WARNING',
+                ],
+            ],
+            [
+                'message' => 'Hello world',
+                'additionals' => [
+                    'monolog.channel' => 'app',
+                    'monolog.level' => 'ERROR',
+                ],
+            ],
         ], $this->sentryTransport->getEvents());
     }
 

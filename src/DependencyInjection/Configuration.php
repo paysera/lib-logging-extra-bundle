@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Paysera\LoggingExtraBundle\DependencyInjection;
 
+use Monolog\Logger;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -20,8 +21,36 @@ class Configuration implements ConfigurationInterface
         }
 
         $children = $rootNode->children();
-        $children->scalarNode('application_name')->isRequired();
-        $children->arrayNode('grouped_exceptions')->prototype('scalar');
+        $children
+            ->scalarNode('application_name')
+            ->isRequired()
+        ;
+        $children
+            ->arrayNode('grouped_exceptions')
+            ->prototype('scalar')
+        ;
+        $children
+            ->arrayNode('monolog')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->scalarNode('minimum_introspection_level')
+                        ->isRequired()
+                        ->defaultValue(Logger::ERROR)
+                    ->end()
+                ->end()
+            ->end()
+        ;
+        $children
+            ->arrayNode('sentry')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->scalarNode('minimum_log_level')
+                        ->isRequired()
+                        ->defaultValue(Logger::ERROR)
+                    ->end()
+                ->end()
+            ->end()
+        ;
 
         return $treeBuilder;
     }

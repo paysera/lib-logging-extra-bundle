@@ -21,5 +21,7 @@ class PayseraLoggingExtraExtension extends Extension
 
         $container->setParameter('paysera_logging_extra.application_name', $config['application_name']);
         $container->setParameter('paysera_logging_extra.grouped_exceptions', $config['grouped_exceptions']);
+        $container->setParameter('paysera_logging_extra.monolog.minimum_introspection_level', $config['monolog']['minimum_introspection_level']);
+        $container->setParameter('paysera_logging_extra.sentry.minimum_log_level', $config['sentry']['minimum_log_level']);
     }
 }

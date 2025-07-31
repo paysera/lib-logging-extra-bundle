@@ -47,3 +47,5 @@ paysera_logging_extra:
     application_name: test-application-name
     grouped_exceptions:
         - Doctrine\DBAL\ConnectionException
+    sentry:
+        minimum_log_level: !php/const Monolog\Logger::WARNING

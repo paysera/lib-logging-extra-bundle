@@ -10,7 +10,7 @@
             <argument type="service">
                 <service class="Sentry\Monolog\Handler">
                     <argument type="service" id="Sentry\State\HubInterface"/>
-                    <argument type="constant">Monolog\Logger::ERROR</argument>
+                    <argument type="string">%paysera_logging_extra.sentry.minimum_log_level%</argument>
                 </service>
             </argument>
         </service>
