@@ -13,6 +13,16 @@ use Throwable;
 
 trait FormatterTrait
 {
+    /** @var string[] */
+    private static $sensitiveKeys = [
+        'password',
+        'secret',
+        'apikey',
+        'apisecret',
+        'apisecretkey',
+        'secretkey',
+        'credentials',
+    ];
     /**
      * Normalizes given data with pre-processing for Doctrine entities and collections.
      *
@@ -93,6 +103,12 @@ trait FormatterTrait
             $parts = explode("\0", $key);
             $fixedKey = end($parts);
             if (substr($fixedKey, 0, 2) === '__') {
+                continue;
+            }
+
+            $normalizedKey = preg_replace('/[^a-z]/', '', strtolower($fixedKey));
+            if (in_array($normalizedKey, self::$sensitiveKeys, true)) {
+                $result[$fixedKey] = '***';
                 continue;
             }
 
