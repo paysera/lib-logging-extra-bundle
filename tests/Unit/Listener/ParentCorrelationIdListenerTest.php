@@ -28,7 +28,11 @@ class ParentCorrelationIdListenerTest extends TestCase
         $request = new Request();
         $request->headers->set('X-Paysera-Correlation-Id', 'parent-id-123');
 
-        $event = $this->createRequestEvent($request, HttpKernelInterface::MAIN_REQUEST);
+        $mainRequestType = defined(HttpKernelInterface::class . '::MAIN_REQUEST')
+            ? HttpKernelInterface::MAIN_REQUEST
+            : HttpKernelInterface::MASTER_REQUEST;
+
+        $event = $this->createRequestEvent($request, $mainRequestType);
 
         $this->listener->onKernelRequest($event);
 
@@ -39,7 +43,11 @@ class ParentCorrelationIdListenerTest extends TestCase
     {
         $request = new Request();
 
-        $event = $this->createRequestEvent($request, HttpKernelInterface::MAIN_REQUEST);
+        $mainRequestType = defined(HttpKernelInterface::class . '::MAIN_REQUEST')
+            ? HttpKernelInterface::MAIN_REQUEST
+            : HttpKernelInterface::MASTER_REQUEST;
+
+        $event = $this->createRequestEvent($request, $mainRequestType);
 
         $this->listener->onKernelRequest($event);
 
