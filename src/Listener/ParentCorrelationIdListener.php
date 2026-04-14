@@ -17,7 +17,7 @@ if (class_exists(RequestEvent::class)) {
 
 class ParentCorrelationIdListener
 {
-    public const HEADER_NAME = 'X-Paysera-Correlation-Id';
+    public const HEADER_NAME = 'Paysera-Correlation-Id';
 
     private ParentCorrelationIdProvider $parentCorrelationIdProvider;
 
