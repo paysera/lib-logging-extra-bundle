@@ -27,11 +27,11 @@
             </argument>
         </service>
 
-        <service id="paysera_logging_extra.processor.parent_correlation_id"
+        <service id="Paysera\LoggingExtraBundle\Service\Processor\ParentCorrelationIdProcessor"
                  class="Paysera\LoggingExtraBundle\Service\Processor\ParentCorrelationIdProcessor">
             <tag name="monolog.processor"/>
 
-            <argument type="service" id="paysera_logging_extra.parent_correlation_id_provider"/>
+            <argument type="service" id="Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider"/>
         </service>
 
         <service id="paysera_logging_extra.processor.sentry_context"

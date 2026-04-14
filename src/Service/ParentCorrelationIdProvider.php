@@ -6,7 +6,13 @@ namespace Paysera\LoggingExtraBundle\Service;
 
 class ParentCorrelationIdProvider
 {
-    private ?string $parentCorrelationId = null;
+
+    private ?string $parentCorrelationId;
+
+    public function __construct()
+    {
+        $this->parentCorrelationId = null;
+    }
 
     public function getParentCorrelationId(): ?string
     {

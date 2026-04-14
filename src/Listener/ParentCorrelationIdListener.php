@@ -17,8 +17,6 @@ if (class_exists(RequestEvent::class)) {
 
 class ParentCorrelationIdListener
 {
-    public const HEADER_NAME = 'Paysera-Correlation-Id';
-
     private ParentCorrelationIdProvider $parentCorrelationIdProvider;
 
     public function __construct(ParentCorrelationIdProvider $parentCorrelationIdProvider)
@@ -36,7 +34,7 @@ class ParentCorrelationIdListener
             return;
         }
 
-        $headerValue = $event->getRequest()->headers->get(self::HEADER_NAME);
+        $headerValue = $event->getRequest()->headers->get(CorrelationIdListener::HEADER_NAME);
 
         $this->parentCorrelationIdProvider->setParentCorrelationId($headerValue);
     }
