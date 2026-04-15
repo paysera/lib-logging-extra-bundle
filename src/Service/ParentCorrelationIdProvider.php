@@ -19,8 +19,13 @@ class ParentCorrelationIdProvider
         return $this->parentCorrelationId;
     }
 
-    public function setParentCorrelationId(?string $parentCorrelationId): void
+    public function setParentCorrelationId(string $parentCorrelationId): void
     {
         $this->parentCorrelationId = $parentCorrelationId;
+    }
+
+    public function resetParentCorrelationId(): void
+    {
+        $this->parentCorrelationId = null;
     }
 }

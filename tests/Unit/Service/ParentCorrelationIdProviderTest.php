@@ -25,12 +25,12 @@ class ParentCorrelationIdProviderTest extends TestCase
         $this->assertSame('abc-123', $provider->getParentCorrelationId());
     }
 
-    public function testSetToNull(): void
+    public function testResetParentCorrelationId(): void
     {
         $provider = new ParentCorrelationIdProvider();
 
         $provider->setParentCorrelationId('abc-123');
-        $provider->setParentCorrelationId(null);
+        $provider->resetParentCorrelationId();
 
         $this->assertNull($provider->getParentCorrelationId());
     }

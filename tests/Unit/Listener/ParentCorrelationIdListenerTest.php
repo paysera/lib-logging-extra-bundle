@@ -39,8 +39,10 @@ class ParentCorrelationIdListenerTest extends TestCase
         $this->assertSame('parent-id-123', $this->provider->getParentCorrelationId());
     }
 
-    public function testSetsNullWhenHeaderAbsent(): void
+    public function testDoesNotSetWhenHeaderAbsent(): void
     {
+        $this->provider->setParentCorrelationId('existing-id');
+
         $request = new Request();
 
         $mainRequestType = defined(HttpKernelInterface::class . '::MAIN_REQUEST')
@@ -51,7 +53,7 @@ class ParentCorrelationIdListenerTest extends TestCase
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertNull($this->provider->getParentCorrelationId());
+        $this->assertSame('existing-id', $this->provider->getParentCorrelationId());
     }
 
     public function testIgnoresSubRequests(): void

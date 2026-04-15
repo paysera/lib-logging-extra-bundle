@@ -27,8 +27,7 @@
             </argument>
         </service>
 
-        <service id="Paysera\LoggingExtraBundle\Service\Processor\ParentCorrelationIdProcessor"
-                 class="Paysera\LoggingExtraBundle\Service\Processor\ParentCorrelationIdProcessor">
+        <service id="Paysera\LoggingExtraBundle\Service\Processor\ParentCorrelationIdProcessor">
             <tag name="monolog.processor"/>
 
             <argument type="service" id="Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider"/>
