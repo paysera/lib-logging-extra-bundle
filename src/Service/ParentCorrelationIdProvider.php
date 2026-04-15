@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Paysera\LoggingExtraBundle\Service;
+
+class ParentCorrelationIdProvider
+{
+
+    private ?string $parentCorrelationId;
+
+    public function __construct()
+    {
+        $this->parentCorrelationId = null;
+    }
+
+    public function getParentCorrelationId(): ?string
+    {
+        return $this->parentCorrelationId;
+    }
+
+    public function setParentCorrelationId(string $parentCorrelationId): void
+    {
+        $this->parentCorrelationId = $parentCorrelationId;
+    }
+
+    public function resetParentCorrelationId(): void
+    {
+        $this->parentCorrelationId = null;
+    }
+}

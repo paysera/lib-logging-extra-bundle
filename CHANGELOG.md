@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.3.0
+### Added
+- Added `ParentCorrelationIdProvider` for extracting parent correlation ID from incoming request headers
+- Added `ParentCorrelationIdListener` for capturing parent correlation ID on kernel request
+- Added `ParentCorrelationIdProcessor` for appending parent correlation ID to log records
+- Registered parent correlation ID services in DI configuration
+
 ## 3.2.1
 ### Fixed
 - Changed versions for graylog2/gelf-php
