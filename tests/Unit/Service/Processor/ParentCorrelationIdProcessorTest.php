@@ -25,14 +25,14 @@ class ParentCorrelationIdProcessorTest extends TestCase
 
         $record = $this->invokeProcessor();
 
-        $this->assertSame('parent-id-123', $this->getExtra($record, 'parent_correlation_id'));
+        $this->assertSame('parent-id-123', $this->getExtra($record, 'parent_corr_id'));
     }
 
     public function testDoesNotAddKeyWhenNull(): void
     {
         $record = $this->invokeProcessor();
 
-        $this->assertArrayNotHasKey('parent_correlation_id', $this->getAllExtra($record));
+        $this->assertArrayNotHasKey('parent_corr_id', $this->getAllExtra($record));
     }
 
     /**

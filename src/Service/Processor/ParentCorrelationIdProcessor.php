@@ -31,7 +31,7 @@ if (class_exists('Monolog\LogRecord')) {
                 $record->level,
                 $record->message,
                 $record->context,
-                array_merge($record->extra, ['parent_correlation_id' => $parentCorrelationId]),
+                array_merge($record->extra, ['parent_corr_id' => $parentCorrelationId]),
                 $record->formatted
             );
         }
@@ -58,7 +58,7 @@ if (class_exists('Monolog\LogRecord')) {
                 return $record;
             }
 
-            $record['extra']['parent_correlation_id'] = $parentCorrelationId;
+            $record['extra']['parent_corr_id'] = $parentCorrelationId;
             return $record;
         }
     }
