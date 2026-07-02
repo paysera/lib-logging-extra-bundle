@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.4.0
+### Added
+- Added `StdoutJsonFormatter` (service `paysera_logging_extra.formatter.stdout_json`) — a compact one-object-per-line JSON formatter for stdout, collected by VictoriaLogs. Output is byte-compatible with the canonical `StdoutJsonFormatter` from `evp/lib-application-logging-bundle`: same field set and order, syslog severity mapping (DEBUG=7 … EMERGENCY=0), correlation id hoisted from `extra`, and a 32766-byte cap with the same shrink order. Opt in by wiring a `php://stdout` handler with this formatter into the existing `graylog_failsafe` `whatfailuregroup` (see README). Existing GELF/Graylog behaviour is unchanged.
+
 ## 3.3.1
 ### Changed
 - Renamed the parent correlation ID log field from `parent_correlation_id` to `parent_corr_id` to match the settled access-log format
