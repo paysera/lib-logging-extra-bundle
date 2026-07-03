@@ -5,40 +5,27 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Service\Formatter;
 
 use DateTimeInterface;
-use Monolog\Formatter\NormalizerFormatter;
-use Monolog\Logger;
 
 /**
- * Base for the stdout JSON-Lines formatter collected by VictoriaLogs.
- *
- * Produces one compact JSON object per line, byte-compatible with the canonical
- * StdoutJsonFormatter shipped by evp/lib-application-logging-bundle: the same field set and
- * order, the same syslog severity mapping, the same 32766-byte cap and shrink order. The
- * concrete class (see StdoutJsonFormatter.php) only adapts the Monolog record shape
- * (array on Monolog 1/2, LogRecord on Monolog 3).
+ * Encodes an already-normalized Monolog record into a single compact JSON line for stdout.
  */
-abstract class AbstractStdoutJsonFormatter extends NormalizerFormatter
+class StdoutRecordEncoder
 {
-    use NormalizeCompatibilityTrait;
-
     public const JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR;
     public const MAX_JSON_BYTE_COUNT = 32766;
 
     /**
-     * Monolog level (100..600) to syslog/GELF severity (7..0) — the same mapping the Graylog
-     * pipeline uses: DEBUG=7, INFO=6, NOTICE=5, WARNING=4, ERROR=3, CRITICAL=2, ALERT=1, EMERGENCY=0.
-     *
      * @var array<int, int>
      */
     private const SYSLOG_LEVELS_BY_MONOLOG_LEVEL = [
-        Logger::DEBUG => 7,
-        Logger::INFO => 6,
-        Logger::NOTICE => 5,
-        Logger::WARNING => 4,
-        Logger::ERROR => 3,
-        Logger::CRITICAL => 2,
-        Logger::ALERT => 1,
-        Logger::EMERGENCY => 0,
+        100 => 7,
+        200 => 6,
+        250 => 5,
+        300 => 4,
+        400 => 3,
+        500 => 2,
+        550 => 1,
+        600 => 0,
     ];
 
     /**
@@ -48,31 +35,14 @@ abstract class AbstractStdoutJsonFormatter extends NormalizerFormatter
 
     public function __construct(string $applicationName)
     {
-        parent::__construct('Y-m-d\TH:i:s.uP');
-
         $this->applicationName = $applicationName;
     }
 
     /**
-     * @param array<array-key, mixed> $records
-     */
-    public function formatBatch(array $records): string
-    {
-        $formatted = '';
-        foreach ($records as $record) {
-            $formatted .= $this->format($record);
-        }
-
-        return $formatted;
-    }
-
-    /**
-     * Builds one JSON line from the version-agnostic parts of a Monolog record.
-     *
      * @param array<array-key, mixed> $context
      * @param array<array-key, mixed> $extra
      */
-    protected function formatRecord(
+    public function encode(
         DateTimeInterface $datetime,
         string $channel,
         int $level,
@@ -81,25 +51,21 @@ abstract class AbstractStdoutJsonFormatter extends NormalizerFormatter
         array $context,
         array $extra
     ): string {
-        $normalizedContext = $this->normalize($context);
-        $normalizedExtra = $this->normalize($extra);
-
         $correlationId = null;
-        if (is_array($normalizedExtra) && array_key_exists('correlation_id', $normalizedExtra)) {
-            $correlationId = $normalizedExtra['correlation_id'];
-            unset($normalizedExtra['correlation_id']);
+        if (array_key_exists('correlation_id', $extra)) {
+            $correlationId = $extra['correlation_id'];
+            unset($extra['correlation_id']);
         }
 
         $fields = [
             'timestamp' => $datetime->format('Y-m-d\TH:i:s.uP'),
             'application_name' => $this->applicationName,
             'channel' => $channel,
-            'level' => $this->getSyslogLevel($level),
+            'level' => self::SYSLOG_LEVELS_BY_MONOLOG_LEVEL[$level] ?? $level,
             'level_name' => $levelName,
             'message' => $message,
-            'full_message' => null,
-            'context' => is_array($normalizedContext) ? $normalizedContext : [],
-            'extra' => is_array($normalizedExtra) ? $normalizedExtra : [],
+            'context' => $context,
+            'extra' => $extra,
             'correlation_id' => $correlationId,
         ];
 
@@ -111,22 +77,14 @@ abstract class AbstractStdoutJsonFormatter extends NormalizerFormatter
      */
     private function encodeWithinByteLimit(array $fields): string
     {
-        $json = $this->encode($fields);
+        $json = $this->toJson($fields);
         if (strlen($json) <= self::MAX_JSON_BYTE_COUNT) {
             return $json;
         }
 
         $fields['truncated'] = true;
-        if (isset($fields['full_message'])) {
-            unset($fields['full_message']);
-            $json = $this->encode($fields);
-            if (strlen($json) <= self::MAX_JSON_BYTE_COUNT) {
-                return $json;
-            }
-        }
-
         unset($fields['context'], $fields['extra']);
-        $json = $this->encode($fields);
+        $json = $this->toJson($fields);
         if (strlen($json) <= self::MAX_JSON_BYTE_COUNT) {
             return $json;
         }
@@ -139,13 +97,13 @@ abstract class AbstractStdoutJsonFormatter extends NormalizerFormatter
             strlen($fields['message']) - $overflow
         );
 
-        return $this->encode($fields);
+        return $this->toJson($fields);
     }
 
     /**
      * @param array<string, mixed> $fields
      */
-    private function encode(array $fields): string
+    private function toJson(array $fields): string
     {
         return (string) json_encode($this->filterEmptyFields($fields), self::JSON_FLAGS);
     }
@@ -190,11 +148,6 @@ abstract class AbstractStdoutJsonFormatter extends NormalizerFormatter
         }
 
         return $truncated;
-    }
-
-    private function getSyslogLevel(int $level): int
-    {
-        return self::SYSLOG_LEVELS_BY_MONOLOG_LEVEL[$level] ?? $level;
     }
 
     /**
