@@ -34,6 +34,8 @@ class ParentCorrelationIdListener
             return;
         }
 
+        $this->parentCorrelationIdProvider->resetParentCorrelationId();
+
         $headerValue = $event->getRequest()->headers->get(CorrelationIdListener::HEADER_NAME);
 
         if ($headerValue !== null) {
