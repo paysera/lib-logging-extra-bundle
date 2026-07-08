@@ -9,7 +9,9 @@ use InvalidArgumentException;
 use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
+use Paysera\LoggingExtraBundle\Service\ExceptionMessageParser;
 use Paysera\LoggingExtraBundle\Service\Formatter\StdoutJsonFormatter;
+use Paysera\LoggingExtraBundle\Service\Formatter\StdoutRecordEncoder;
 use PHPUnit\Framework\TestCase;
 
 class StdoutJsonFormatterTest extends TestCase
@@ -168,7 +170,7 @@ class StdoutJsonFormatterTest extends TestCase
 
     public function testFormatBatchEmitsOneLinePerRecord(): void
     {
-        $formatter = new StdoutJsonFormatter(self::APPLICATION_NAME);
+        $formatter = $this->createFormatter();
 
         $batch = $formatter->formatBatch([
             $this->record(['message' => 'first']),
@@ -211,7 +213,7 @@ class StdoutJsonFormatterTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        (new StdoutJsonFormatter(self::APPLICATION_NAME))->format([
+        $this->createFormatter()->format([
             'message' => 'no datetime',
             'level' => Logger::INFO,
             'level_name' => 'INFO',
@@ -226,7 +228,14 @@ class StdoutJsonFormatterTest extends TestCase
      */
     private function format(array $overrides = []): string
     {
-        return (new StdoutJsonFormatter(self::APPLICATION_NAME))->format($this->record($overrides));
+        return $this->createFormatter()->format($this->record($overrides));
+    }
+
+    private function createFormatter(): StdoutJsonFormatter
+    {
+        return new StdoutJsonFormatter(
+            new StdoutRecordEncoder(self::APPLICATION_NAME, new ExceptionMessageParser())
+        );
     }
 
     /**

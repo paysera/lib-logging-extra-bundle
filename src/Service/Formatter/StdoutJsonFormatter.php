@@ -8,7 +8,6 @@ use InvalidArgumentException;
 use Monolog\Formatter\NormalizerFormatter;
 use Monolog\Logger;
 use Monolog\LogRecord;
-use Paysera\LoggingExtraBundle\Service\ExceptionMessageParser;
 
 /**
  * Formats Monolog records as compact JSON Lines for stdout, collected by VictoriaLogs.
@@ -22,16 +21,13 @@ if (class_exists('Monolog\LogRecord')) {
     {
         use NormalizeCompatibilityTrait;
 
-        /**
-         * @var StdoutRecordEncoder
-         */
-        private $encoder;
+        private StdoutRecordEncoder $encoder;
 
-        public function __construct(string $applicationName)
+        public function __construct(StdoutRecordEncoder $encoder)
         {
             parent::__construct('Y-m-d\TH:i:s.uP');
 
-            $this->encoder = new StdoutRecordEncoder($applicationName, new ExceptionMessageParser());
+            $this->encoder = $encoder;
         }
 
         public function format(LogRecord $record): string
@@ -62,16 +58,13 @@ if (class_exists('Monolog\LogRecord')) {
     {
         use NormalizeCompatibilityTrait;
 
-        /**
-         * @var StdoutRecordEncoder
-         */
-        private $encoder;
+        private StdoutRecordEncoder $encoder;
 
-        public function __construct(string $applicationName)
+        public function __construct(StdoutRecordEncoder $encoder)
         {
             parent::__construct('Y-m-d\TH:i:s.uP');
 
-            $this->encoder = new StdoutRecordEncoder($applicationName, new ExceptionMessageParser());
+            $this->encoder = $encoder;
         }
 
         /**
