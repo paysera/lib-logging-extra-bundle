@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `StdoutJsonFormatter` (service `paysera_logging_extra.formatter.stdout_json`) — a compact one-object-per-line JSON formatter for stdout, collected by VictoriaLogs. Output is byte-compatible with the canonical `StdoutJsonFormatter` from `evp/lib-application-logging-bundle`: same field set and order (`timestamp`, `application_name`, `channel`, syslog `level` (DEBUG=7 … EMERGENCY=0), `level_name`, `message`, optional `full_message`, `context`, `extra`, `correlation_id`), exception-shaped messages split into a short `message` + raw `full_message` (via `ExceptionMessageParser`), correlation id hoisted from `extra`, and a 32766-byte cap with the same shrink order (drop `full_message`, then `context`/`extra`, then truncate `message`). Opt in by wiring a `php://stdout` handler with this formatter into the existing `graylog_failsafe` `whatfailuregroup` (see README). Existing GELF/Graylog behaviour is unchanged.
 
+## 3.3.2
+### Security
+- Validate the parent correlation ID in `ParentCorrelationIdProvider::setParentCorrelationId()` — the single place the invariant is enforced for every caller. Values that are empty, longer than 128 characters, or contain characters outside `[A-Za-z0-9._-]` are ignored, so a hostile `Paysera-Correlation-Id` header cannot inject control characters or bloat log lines and Sentry tags
+
+### Fixed
+- Reset the parent correlation ID at the start of every main HTTP request so a value captured on a previous request cannot leak into a later one handled by the same reused process (e.g. RoadRunner)
+
 ## 3.3.1
 ### Changed
 - Renamed the parent correlation ID log field from `parent_correlation_id` to `parent_corr_id` to match the settled access-log format
