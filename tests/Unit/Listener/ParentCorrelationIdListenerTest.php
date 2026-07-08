@@ -28,32 +28,108 @@ class ParentCorrelationIdListenerTest extends TestCase
         $request = new Request();
         $request->headers->set('Paysera-Correlation-Id', 'parent-id-123');
 
-        $mainRequestType = defined(HttpKernelInterface::class . '::MAIN_REQUEST')
-            ? HttpKernelInterface::MAIN_REQUEST
-            : HttpKernelInterface::MASTER_REQUEST;
-
-        $event = $this->createRequestEvent($request, $mainRequestType);
+        $event = $this->createRequestEvent($request, $this->mainRequestType());
 
         $this->listener->onKernelRequest($event);
 
         $this->assertSame('parent-id-123', $this->provider->getParentCorrelationId());
     }
 
-    public function testDoesNotSetWhenHeaderAbsent(): void
+    public function testResetsStaleValueWhenHeaderAbsent(): void
     {
-        $this->provider->setParentCorrelationId('existing-id');
+        $this->provider->setParentCorrelationId('stale-id');
 
         $request = new Request();
 
-        $mainRequestType = defined(HttpKernelInterface::class . '::MAIN_REQUEST')
-            ? HttpKernelInterface::MAIN_REQUEST
-            : HttpKernelInterface::MASTER_REQUEST;
-
-        $event = $this->createRequestEvent($request, $mainRequestType);
+        $event = $this->createRequestEvent($request, $this->mainRequestType());
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertSame('existing-id', $this->provider->getParentCorrelationId());
+        $this->assertNull($this->provider->getParentCorrelationId());
+    }
+
+    public function testResetsStaleValueWhenHeaderEmpty(): void
+    {
+        $this->provider->setParentCorrelationId('stale-id');
+
+        $request = new Request();
+        $request->headers->set('Paysera-Correlation-Id', '');
+
+        $event = $this->createRequestEvent($request, $this->mainRequestType());
+
+        $this->listener->onKernelRequest($event);
+
+        $this->assertNull($this->provider->getParentCorrelationId());
+    }
+
+    public function testResetsStaleValueWhenHeaderTooLong(): void
+    {
+        $this->provider->setParentCorrelationId('stale-id');
+
+        $request = new Request();
+        $request->headers->set('Paysera-Correlation-Id', str_repeat('a', 129));
+
+        $event = $this->createRequestEvent($request, $this->mainRequestType());
+
+        $this->listener->onKernelRequest($event);
+
+        $this->assertNull($this->provider->getParentCorrelationId());
+    }
+
+    /**
+     * @dataProvider provideInvalidCharsetHeaders
+     */
+    public function testResetsStaleValueWhenHeaderHasInvalidCharset(string $headerValue): void
+    {
+        $this->provider->setParentCorrelationId('stale-id');
+
+        $request = new Request();
+        $request->headers->set('Paysera-Correlation-Id', $headerValue);
+
+        $event = $this->createRequestEvent($request, $this->mainRequestType());
+
+        $this->listener->onKernelRequest($event);
+
+        $this->assertNull($this->provider->getParentCorrelationId());
+    }
+
+    public function testOverwritesStaleValueWithValidHeader(): void
+    {
+        $this->provider->setParentCorrelationId('stale-id');
+
+        $request = new Request();
+        $request->headers->set('Paysera-Correlation-Id', 'fresh-id-456');
+
+        $event = $this->createRequestEvent($request, $this->mainRequestType());
+
+        $this->listener->onKernelRequest($event);
+
+        $this->assertSame('fresh-id-456', $this->provider->getParentCorrelationId());
+    }
+
+    public function provideInvalidCharsetHeaders(): array
+    {
+        return [
+            'space' => ['parent id 123'],
+            'newline injection' => ["parent-id\ninjected=value"],
+            'tab' => ["parent-id\t123"],
+            'structural punctuation' => ['parent-id{"key":"value"}'],
+            'slash' => ['parent/id/123'],
+        ];
+    }
+
+    public function testAcceptsMaxLengthHeader(): void
+    {
+        $value = str_repeat('a', 128);
+
+        $request = new Request();
+        $request->headers->set('Paysera-Correlation-Id', $value);
+
+        $event = $this->createRequestEvent($request, $this->mainRequestType());
+
+        $this->listener->onKernelRequest($event);
+
+        $this->assertSame($value, $this->provider->getParentCorrelationId());
     }
 
     public function testIgnoresSubRequests(): void
@@ -75,5 +151,12 @@ class ParentCorrelationIdListenerTest extends TestCase
         $kernel = $this->createMock(HttpKernelInterface::class);
 
         return new RequestEvent($kernel, $request, $requestType);
+    }
+
+    private function mainRequestType(): int
+    {
+        return defined(HttpKernelInterface::class . '::MAIN_REQUEST')
+            ? HttpKernelInterface::MAIN_REQUEST
+            : HttpKernelInterface::MASTER_REQUEST;
     }
 }

@@ -34,4 +34,52 @@ class ParentCorrelationIdProviderTest extends TestCase
 
         $this->assertNull($provider->getParentCorrelationId());
     }
+
+    public function testAcceptsMaxLengthValue(): void
+    {
+        $provider = new ParentCorrelationIdProvider();
+        $value = str_repeat('a', 128);
+
+        $provider->setParentCorrelationId($value);
+
+        $this->assertSame($value, $provider->getParentCorrelationId());
+    }
+
+    /**
+     * @dataProvider provideInvalidValues
+     */
+    public function testIgnoresInvalidValue(string $value): void
+    {
+        $provider = new ParentCorrelationIdProvider();
+
+        $provider->setParentCorrelationId($value);
+
+        $this->assertNull($provider->getParentCorrelationId());
+    }
+
+    /**
+     * @dataProvider provideInvalidValues
+     */
+    public function testInvalidValueDoesNotClobberExistingValue(string $value): void
+    {
+        $provider = new ParentCorrelationIdProvider();
+        $provider->setParentCorrelationId('valid-id');
+
+        $provider->setParentCorrelationId($value);
+
+        $this->assertSame('valid-id', $provider->getParentCorrelationId());
+    }
+
+    public function provideInvalidValues(): array
+    {
+        return [
+            'empty' => [''],
+            'too long' => [str_repeat('a', 129)],
+            'space' => ['parent id'],
+            'newline injection' => ["parent-id\ninjected=value"],
+            'tab' => ["parent-id\t123"],
+            'structural punctuation' => ['parent-id{"key":"value"}'],
+            'slash' => ['parent/id/123'],
+        ];
+    }
 }

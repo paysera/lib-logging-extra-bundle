@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.3.2
+### Security
+- Validate the parent correlation ID in `ParentCorrelationIdProvider::setParentCorrelationId()` — the single place the invariant is enforced for every caller. Values that are empty, longer than 128 characters, or contain characters outside `[A-Za-z0-9._-]` are ignored, so a hostile `Paysera-Correlation-Id` header cannot inject control characters or bloat log lines and Sentry tags
+
+### Fixed
+- Reset the parent correlation ID at the start of every main HTTP request so a value captured on a previous request cannot leak into a later one handled by the same reused process (e.g. RoadRunner)
+
 ## 3.3.1
 ### Changed
 - Renamed the parent correlation ID log field from `parent_correlation_id` to `parent_corr_id` to match the settled access-log format
