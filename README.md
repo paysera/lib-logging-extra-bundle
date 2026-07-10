@@ -98,6 +98,42 @@ paysera_logging_extra:
   application_name: app-something   # customise this to know which project message was sent from
 ```
 
+### Dual-write to stdout (VictoriaLogs)
+
+To write every record to **both** Graylog and stdout (compact JSON Lines, collected by VictoriaLogs),
+add a `stdout` handler using `paysera_logging_extra.formatter.stdout_json` and make it a member of the
+existing `graylog_failsafe` `whatfailuregroup`. The `whatfailuregroup` isolates failures per member, so
+Graylog being unreachable cannot break stdout and vice-versa. No per-call-site changes are needed, and
+the existing Graylog delivery is untouched.
+
+```yaml
+monolog:
+    handlers:
+        graylog_failsafe:
+            type: whatfailuregroup
+            members: [graylog, stdout]   # add stdout as a second dual-write target
+            nested: true
+        stdout:
+            type: stream
+            path: 'php://stdout'
+            level: debug                 # upstream filters/fingers_crossed already gate what reaches the group
+            formatter: paysera_logging_extra.formatter.stdout_json   # registered by the bundle
+            nested: true
+```
+
+Each stdout line is one compact JSON object: `timestamp` (ISO-8601, microseconds + offset),
+`application_name`, `channel`, syslog `level` (DEBUG=7 … EMERGENCY=0), `level_name`, `message`,
+optional `full_message` (the raw original when the message is exception-shaped), optional
+`context`/`extra`, and a top-level `correlation_id` (hoisted from `extra`). Lines are capped
+at 32766 bytes; oversize records stay single-line, are flagged `truncated`, and are shrunk by dropping
+`full_message` first, then `context`/`extra`, then truncating `message` UTF-8-safely, and finally
+dropping `correlation_id`.
+
+Exception-shaped messages (`RuntimeException: boom in /app/src/Foo.php:42`) are split into a short
+`message` and the raw `full_message`. Matching is case-insensitive, which differs from the canonical
+formatter in `evp/lib-application-logging-bundle`: that one only recognises a lowercase `exception`,
+so it leaves standard PHP exception messages unsplit and emits no `full_message` for them.
+
 ## Usage
 
 Log with INFO level and above to get messages in Graylog.
