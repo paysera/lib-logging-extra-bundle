@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
+use Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface;
 
 class PayseraLoggingExtraExtension extends Extension
 {
@@ -21,5 +22,9 @@ class PayseraLoggingExtraExtension extends Extension
 
         $container->setParameter('paysera_logging_extra.application_name', $config['application_name']);
         $container->setParameter('paysera_logging_extra.grouped_exceptions', $config['grouped_exceptions']);
+
+        if ($config['trace_id_provider'] !== null) {
+            $container->setAlias(TraceIdProviderInterface::class, $config['trace_id_provider']);
+        }
     }
 }

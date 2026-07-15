@@ -22,6 +22,7 @@ class Configuration implements ConfigurationInterface
         $children = $rootNode->children();
         $children->scalarNode('application_name')->isRequired();
         $children->arrayNode('grouped_exceptions')->prototype('scalar');
+        $children->scalarNode('trace_id_provider')->defaultNull();
 
         return $treeBuilder;
     }

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.5.0
+### Added
+- `TraceIdProcessor` and `TraceIdProviderInterface` for recording a request-spanning `trace_id` log field, fed by a host-supplied provider. Distinct from the per-Hop `correlation_id`. The field is skipped when no provider is configured; the existing correlation-id mechanism is unchanged. New `trace_id_provider` config key.
+
 ## 3.4.1
 ### Fixed
 - `ExceptionMessageParser` now uses the improved split regex from the canonical parser in `evp/lib-application-logging-bundle` 8.9.1/7.9.1 (`/^(.*?[Ee]xception.*?) in \//`), so both bundles split exception-shaped messages identically. The short `message` is cut at the first ` in /` file path instead of the first word `in`, so tails like `in state NEW`, `in driver: ...` or SQL `IN (...)` are no longer dropped from the headline (previously e.g. every `An exception occurred in driver: ...` collapsed to `An exception occurred`). `Exception` matches with a capitalized or lowercase first letter (`[Ee]xception`), and the ` in /` delimiter is case-sensitive, so SQL `IN /...` fragments are not split points. Messages without a `/`-prefixed file path (including prose that merely mentions an `*Exception*` class) are now left unsplit and emit no `full_message`.
