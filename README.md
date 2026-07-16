@@ -130,9 +130,11 @@ at 32766 bytes; oversize records stay single-line, are flagged `truncated`, and 
 dropping `correlation_id`.
 
 Exception-shaped messages (`RuntimeException: boom in /app/src/Foo.php:42`) are split into a short
-`message` and the raw `full_message`. Matching is case-insensitive, which differs from the canonical
-formatter in `evp/lib-application-logging-bundle`: that one only recognises a lowercase `exception`,
-so it leaves standard PHP exception messages unsplit and emits no `full_message` for them.
+`message` and the raw `full_message`, identically to the canonical formatter in
+`evp/lib-application-logging-bundle` (8.9.1/7.9.1). `Exception` matches capitalized or lowercase, and
+the split is anchored at the first ` in /` file path — not at the first word `in` — so tails like
+`in state NEW`, `in driver: ...` or SQL `IN (...)` stay in the short `message`. Messages without a
+`/`-prefixed file path are left unsplit and emit no `full_message`.
 
 ## Usage
 
