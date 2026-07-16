@@ -36,7 +36,7 @@
         <service id="Paysera\LoggingExtraBundle\Service\Processor\TraceIdProcessor">
             <tag name="monolog.processor"/>
 
-            <argument type="service" id="Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface" on-invalid="null"/>
+            <argument type="service" id="Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface"/>
         </service>
 
         <service id="paysera_logging_extra.processor.sentry_context"

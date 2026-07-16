@@ -40,7 +40,7 @@ class StdoutJsonFormatterTest extends TestCase
     {
         $line = rtrim($this->format([
             'context' => ['client_id' => 7],
-            'extra' => ['correlation_id' => 'corr-1', 'memory_peak' => '2 MB'],
+            'extra' => ['correlation_id' => 'corr-1', 'trace_id' => 'trace-1', 'memory_peak' => '2 MB'],
         ]), "\n");
 
         $decoded = json_decode($line, true);
@@ -56,9 +56,10 @@ class StdoutJsonFormatterTest extends TestCase
                 'context',
                 'extra',
                 'correlation_id',
+                'trace_id',
             ],
             array_keys($decoded),
-            'Field order must match the canonical evp StdoutJsonFormatter'
+            'Field order must match the canonical evp StdoutJsonFormatter, with trace_id appended'
         );
     }
 
@@ -103,6 +104,20 @@ class StdoutJsonFormatterTest extends TestCase
         $extra = $decoded['extra'];
         $this->assertIsArray($extra);
         $this->assertArrayNotHasKey('correlation_id', $extra);
+        $this->assertSame('2 MB', $extra['memory_peak']);
+    }
+
+    public function testHoistsTraceIdFromExtraToTopLevel(): void
+    {
+        $decoded = $this->decode([
+            'extra' => ['trace_id' => 'trace-abc', 'memory_peak' => '2 MB'],
+        ]);
+
+        $this->assertSame('trace-abc', $decoded['trace_id']);
+
+        $extra = $decoded['extra'];
+        $this->assertIsArray($extra);
+        $this->assertArrayNotHasKey('trace_id', $extra);
         $this->assertSame('2 MB', $extra['memory_peak']);
     }
 
@@ -171,6 +186,7 @@ class StdoutJsonFormatterTest extends TestCase
         $this->assertArrayNotHasKey('context', $decoded);
         $this->assertArrayNotHasKey('extra', $decoded);
         $this->assertArrayNotHasKey('correlation_id', $decoded);
+        $this->assertArrayNotHasKey('trace_id', $decoded);
     }
 
     /**
@@ -212,13 +228,29 @@ class StdoutJsonFormatterTest extends TestCase
         $this->assertArrayNotHasKey('extra', $decoded);
     }
 
-    public function testDropsCorrelationIdWhenItAloneExceedsTheByteCap(): void
+    public function testKeepsHoistedIdsOnOversizeRecords(): void
     {
-        // correlation_id is hoisted verbatim and is not truncatable, so it is the last field dropped
-        // to keep the cap; every other remaining field is fixed-size.
+        $decoded = $this->decode([
+            'message' => str_repeat('x', 40000),
+            'extra' => ['correlation_id' => 'corr-1', 'trace_id' => 'trace-1'],
+        ]);
+
+        $this->assertTrue($decoded['truncated']);
+        $this->assertArrayNotHasKey('extra', $decoded);
+        $this->assertSame('corr-1', $decoded['correlation_id']);
+        $this->assertSame('trace-1', $decoded['trace_id']);
+    }
+
+    /**
+     * @dataProvider hoistedIdProvider
+     */
+    public function testDropsHoistedIdsWhenOneAloneExceedsTheByteCap(string $field): void
+    {
+        // correlation_id and trace_id are hoisted verbatim and are not truncatable, so they are the
+        // last fields dropped to keep the cap; every other remaining field is fixed-size.
         $line = rtrim($this->format([
             'message' => str_repeat('x', 1000),
-            'extra' => ['correlation_id' => str_repeat('c', 40000)],
+            'extra' => [$field => str_repeat('c', 40000)],
         ]), "\n");
 
         $this->assertLessThanOrEqual(StdoutRecordEncoder::MAX_JSON_BYTE_COUNT, strlen($line));
@@ -226,7 +258,18 @@ class StdoutJsonFormatterTest extends TestCase
         $decoded = json_decode($line, true);
         $this->assertIsArray($decoded);
         $this->assertTrue($decoded['truncated']);
-        $this->assertArrayNotHasKey('correlation_id', $decoded);
+        $this->assertArrayNotHasKey($field, $decoded);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function hoistedIdProvider(): array
+    {
+        return [
+            'correlation_id' => ['correlation_id'],
+            'trace_id' => ['trace_id'],
+        ];
     }
 
     public function testFormatBatchEmitsOneLinePerRecord(): void

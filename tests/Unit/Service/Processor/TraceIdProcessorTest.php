@@ -37,6 +37,32 @@ class TraceIdProcessorTest extends TestCase
         $this->assertArrayNotHasKey('trace_id', $this->getAllExtra($record));
     }
 
+    public function testLeavesTheRestOfTheRecordUntouched(): void
+    {
+        $this->provider->method('getTraceId')->willReturn('trace-id-123');
+        $processor = new TraceIdProcessor($this->provider);
+
+        $record = $this->invokeProcessor($processor);
+
+        $this->assertSame('test message', $this->getField($record, 'message'));
+        $this->assertSame('test', $this->getField($record, 'channel'));
+        $this->assertSame('kept', $this->getExtra($record, 'existing'));
+    }
+
+    /**
+     * @param \Monolog\LogRecord|array $record
+     *
+     * @return mixed
+     */
+    private function getField($record, string $key)
+    {
+        if ($record instanceof \Monolog\LogRecord) {
+            return $record->{$key};
+        }
+
+        return $record[$key];
+    }
+
     /**
      * @return \Monolog\LogRecord|array
      */
@@ -49,7 +75,7 @@ class TraceIdProcessorTest extends TestCase
                 \Monolog\Level::Info,
                 'test message',
                 [],
-                [],
+                ['existing' => 'kept'],
             );
         } else {
             $record = [
@@ -59,7 +85,7 @@ class TraceIdProcessorTest extends TestCase
                 'level_name' => 'INFO',
                 'channel' => 'test',
                 'datetime' => new \DateTimeImmutable(),
-                'extra' => [],
+                'extra' => ['existing' => 'kept'],
             ];
         }
 

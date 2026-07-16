@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
+use Paysera\LoggingExtraBundle\Service\Processor\TraceIdProcessor;
 use Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface;
 
 class PayseraLoggingExtraExtension extends Extension
@@ -25,6 +26,8 @@ class PayseraLoggingExtraExtension extends Extension
 
         if ($config['trace_id_provider'] !== null) {
             $container->setAlias(TraceIdProviderInterface::class, $config['trace_id_provider']);
+        } else {
+            $container->removeDefinition(TraceIdProcessor::class);
         }
     }
 }

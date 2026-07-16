@@ -13,14 +13,14 @@ if (class_exists('Monolog\LogRecord')) {
     {
         private $traceIdProvider;
 
-        public function __construct(?TraceIdProviderInterface $traceIdProvider = null)
+        public function __construct(TraceIdProviderInterface $traceIdProvider)
         {
             $this->traceIdProvider = $traceIdProvider;
         }
 
         public function __invoke(\Monolog\LogRecord $record): \Monolog\LogRecord
         {
-            $traceId = $this->traceIdProvider !== null ? $this->traceIdProvider->getTraceId() : null;
+            $traceId = $this->traceIdProvider->getTraceId();
 
             if ($traceId === null) {
                 return $record;
@@ -43,7 +43,7 @@ if (class_exists('Monolog\LogRecord')) {
     {
         private $traceIdProvider;
 
-        public function __construct(?TraceIdProviderInterface $traceIdProvider = null)
+        public function __construct(TraceIdProviderInterface $traceIdProvider)
         {
             $this->traceIdProvider = $traceIdProvider;
         }
@@ -54,7 +54,7 @@ if (class_exists('Monolog\LogRecord')) {
          */
         public function __invoke($record)
         {
-            $traceId = $this->traceIdProvider !== null ? $this->traceIdProvider->getTraceId() : null;
+            $traceId = $this->traceIdProvider->getTraceId();
 
             if ($traceId === null) {
                 return $record;

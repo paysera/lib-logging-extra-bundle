@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 3.5.0
 ### Added
-- `TraceIdProcessor` and `TraceIdProviderInterface` for recording a request-spanning `trace_id` log field, fed by a host-supplied provider. Distinct from the per-Hop `correlation_id`. The field is skipped when no provider is configured; the existing correlation-id mechanism is unchanged. New `trace_id_provider` config key.
+- `TraceIdProcessor` and `TraceIdProviderInterface` for recording a request-spanning `trace_id` log field, fed by a host-supplied provider. Distinct from the per-Hop `correlation_id`. Opt in with the new `trace_id_provider` config key, pointing at your own `TraceIdProviderInterface` service (see README). Without it the processor is not registered at all and no `trace_id` is recorded, so existing consumers are unaffected; with it, a service id that does not exist fails container compilation instead of silently logging without `trace_id`. Records where the provider returns `null` carry no `trace_id` field. The existing correlation-id mechanism is unchanged.
+- `StdoutJsonFormatter` hoists `trace_id` out of `extra` to the top level next to `correlation_id`, and drops it only as a last resort when a record exceeds the byte cap. Oversize records are mostly exception dumps, so keeping it nested under `extra` would discard the field exactly where a request most needs to stay traceable. Graylog is unaffected — `GelfMessageFormatter` already emits `extra` keys unprefixed, so `trace_id` lands there as a normal additional.
 
 ## 3.4.1
 ### Fixed
