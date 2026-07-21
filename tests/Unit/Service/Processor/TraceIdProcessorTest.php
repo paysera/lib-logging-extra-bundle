@@ -6,10 +6,13 @@ namespace Paysera\LoggingExtraBundle\Tests\Unit\Service\Processor;
 
 use Paysera\LoggingExtraBundle\Service\Processor\TraceIdProcessor;
 use Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface;
+use Paysera\LoggingExtraBundle\Tests\Unit\Support\MonologRecordTrait;
 use PHPUnit\Framework\TestCase;
 
 class TraceIdProcessorTest extends TestCase
 {
+    use MonologRecordTrait;
+
     private TraceIdProviderInterface $provider;
 
     protected function setUp(): void
@@ -24,7 +27,7 @@ class TraceIdProcessorTest extends TestCase
 
         $record = $this->invokeProcessor($processor);
 
-        $this->assertSame('trace-id-123', $this->getExtra($record, 'trace_id'));
+        $this->assertSame('trace-id-123', $this->getRecordExtra($record)['trace_id']);
     }
 
     public function testDoesNotAddKeyWhenNull(): void
@@ -34,7 +37,7 @@ class TraceIdProcessorTest extends TestCase
 
         $record = $this->invokeProcessor($processor);
 
-        $this->assertArrayNotHasKey('trace_id', $this->getAllExtra($record));
+        $this->assertArrayNotHasKey('trace_id', $this->getRecordExtra($record));
     }
 
     public function testLeavesTheRestOfTheRecordUntouched(): void
@@ -44,75 +47,16 @@ class TraceIdProcessorTest extends TestCase
 
         $record = $this->invokeProcessor($processor);
 
-        $this->assertSame('test message', $this->getField($record, 'message'));
-        $this->assertSame('test', $this->getField($record, 'channel'));
-        $this->assertSame('kept', $this->getExtra($record, 'existing'));
+        $this->assertSame('test message', $this->getRecordField($record, 'message'));
+        $this->assertSame('test', $this->getRecordField($record, 'channel'));
+        $this->assertSame('kept', $this->getRecordExtra($record)['existing']);
     }
 
     /**
-     * @param \Monolog\LogRecord|array $record
-     *
-     * @return mixed
-     */
-    private function getField($record, string $key)
-    {
-        if ($record instanceof \Monolog\LogRecord) {
-            return $record->{$key};
-        }
-
-        return $record[$key];
-    }
-
-    /**
-     * @return \Monolog\LogRecord|array
+     * @return \Monolog\LogRecord|array<string, mixed>
      */
     private function invokeProcessor(TraceIdProcessor $processor)
     {
-        if (class_exists('Monolog\LogRecord')) {
-            $record = new \Monolog\LogRecord(
-                new \DateTimeImmutable(),
-                'test',
-                \Monolog\Level::Info,
-                'test message',
-                [],
-                ['existing' => 'kept'],
-            );
-        } else {
-            $record = [
-                'message' => 'test message',
-                'context' => [],
-                'level' => 200,
-                'level_name' => 'INFO',
-                'channel' => 'test',
-                'datetime' => new \DateTimeImmutable(),
-                'extra' => ['existing' => 'kept'],
-            ];
-        }
-
-        return ($processor)($record);
-    }
-
-    /**
-     * @param \Monolog\LogRecord|array $record
-     */
-    private function getExtra($record, string $key): string
-    {
-        if ($record instanceof \Monolog\LogRecord) {
-            return $record->extra[$key];
-        }
-
-        return $record['extra'][$key];
-    }
-
-    /**
-     * @param \Monolog\LogRecord|array $record
-     */
-    private function getAllExtra($record): array
-    {
-        if ($record instanceof \Monolog\LogRecord) {
-            return $record->extra;
-        }
-
-        return $record['extra'];
+        return ($processor)($this->buildLogRecord(['extra' => ['existing' => 'kept']]));
     }
 }

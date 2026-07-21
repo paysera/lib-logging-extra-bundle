@@ -6,16 +6,18 @@ namespace Paysera\LoggingExtraBundle\Tests\Unit\Service\Formatter;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Paysera\LoggingExtraBundle\Service\ExceptionMessageParser;
 use Paysera\LoggingExtraBundle\Service\Formatter\StdoutJsonFormatter;
 use Paysera\LoggingExtraBundle\Service\Formatter\StdoutRecordEncoder;
+use Paysera\LoggingExtraBundle\Tests\Unit\Support\MonologRecordTrait;
 use PHPUnit\Framework\TestCase;
 
 class StdoutJsonFormatterTest extends TestCase
 {
+    use MonologRecordTrait;
+
     private const APPLICATION_NAME = 'app-target2-integration';
 
     public function testFormatsRecordAsSingleCompactJsonLine(): void
@@ -357,8 +359,8 @@ class StdoutJsonFormatterTest extends TestCase
     }
 
     /**
-     * Builds a Monolog record in the shape the installed Monolog major expects
-     * (LogRecord on v3, associative array on v1/v2).
+     * Builds a Monolog record with this formatter's default shape, deferring the
+     * v1/v3 branching to MonologRecordTrait.
      *
      * @param array<string, mixed> $overrides
      *
@@ -366,26 +368,10 @@ class StdoutJsonFormatterTest extends TestCase
      */
     private function record(array $overrides = [])
     {
-        $datetime = $overrides['datetime'] ?? new DateTimeImmutable('2026-06-10T16:03:21.123456+03:00');
-        $channel = $overrides['channel'] ?? 'app';
-        $level = $overrides['level'] ?? Logger::INFO;
-        $levelName = $overrides['level_name'] ?? 'INFO';
-        $message = $overrides['message'] ?? 'Example message';
-        $context = $overrides['context'] ?? [];
-        $extra = $overrides['extra'] ?? [];
-
-        if (class_exists(LogRecord::class)) {
-            return new LogRecord($datetime, $channel, Level::from($level), $message, $context, $extra);
-        }
-
-        return [
-            'message' => $message,
-            'context' => $context,
-            'level' => $level,
-            'level_name' => $levelName,
-            'channel' => $channel,
-            'datetime' => $datetime,
-            'extra' => $extra,
-        ];
+        return $this->buildLogRecord($overrides + [
+            'datetime' => new DateTimeImmutable('2026-06-10T16:03:21.123456+03:00'),
+            'channel' => 'app',
+            'message' => 'Example message',
+        ]);
     }
 }
