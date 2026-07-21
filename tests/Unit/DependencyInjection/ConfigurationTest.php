@@ -11,31 +11,29 @@ use Symfony\Component\Config\Definition\Processor;
 
 class ConfigurationTest extends TestCase
 {
-    public function testTraceIdProviderDefaultsToNull(): void
+    /**
+     * @dataProvider traceIdProviderProvider
+     *
+     * @param array<string, mixed> $input
+     */
+    public function testResolvesTraceIdProvider(array $input, ?string $expected): void
     {
-        $config = $this->process(['application_name' => 'app-something']);
+        $config = $this->process(['application_name' => 'app-something'] + $input);
 
-        $this->assertNull($config['trace_id_provider']);
+        $this->assertSame($expected, $config['trace_id_provider']);
     }
 
-    public function testKeepsConfiguredTraceIdProvider(): void
+    /**
+     * @return array<string, array{array<string, mixed>, string|null}>
+     */
+    public static function traceIdProviderProvider(): array
     {
-        $config = $this->process([
-            'application_name' => 'app-something',
-            'trace_id_provider' => 'app.trace_id_provider',
-        ]);
-
-        $this->assertSame('app.trace_id_provider', $config['trace_id_provider']);
-    }
-
-    public function testAllowsExplicitNullTraceIdProvider(): void
-    {
-        $config = $this->process([
-            'application_name' => 'app-something',
-            'trace_id_provider' => null,
-        ]);
-
-        $this->assertNull($config['trace_id_provider']);
+        return [
+            'omitted defaults to null' => [[], null],
+            'explicit null stays null' => [['trace_id_provider' => null], null],
+            'configured id is kept' => [['trace_id_provider' => 'app.trace_id_provider'], 'app.trace_id_provider'],
+            'surrounding whitespace is trimmed' => [['trace_id_provider' => '  app.trace_id_provider  '], 'app.trace_id_provider'],
+        ];
     }
 
     /**

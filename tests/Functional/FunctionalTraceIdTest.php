@@ -8,10 +8,14 @@ use Gelf\Message;
 use Monolog\Handler\FingersCrossedHandler;
 use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler\TestGraylogHandler;
 use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTraceIdProvider;
+use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTransport;
 use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\TestKernel;
 use PHPUnit\Framework\TestCase;
+use Sentry\Event;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use Symfony\Component\DependencyInjection\ResettableContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Contracts\Service\ResetInterface;
 
 class FunctionalTraceIdTest extends TestCase
 {
@@ -24,6 +28,19 @@ class FunctionalTraceIdTest extends TestCase
     {
         if ($this->kernel === null) {
             return;
+        }
+
+        // Boot may have failed before a container existed (testFailsToCompileWhenProviderIsMisspelled),
+        // so getContainer() can throw — shut the kernel down and reset the container only when there is one.
+        try {
+            $container = $this->kernel->getContainer();
+        } catch (\LogicException $exception) {
+            $container = null;
+        }
+
+        $this->kernel->shutdown();
+        if ($container instanceof ResettableContainerInterface || $container instanceof ResetInterface) {
+            $container->reset();
         }
 
         (new Filesystem())->remove($this->kernel->getCacheDir());
@@ -39,6 +56,17 @@ class FunctionalTraceIdTest extends TestCase
 
         $this->assertArrayHasKey('trace_id', $additionals);
         $this->assertSame(TestTraceIdProvider::TRACE_ID, $additionals['trace_id']);
+    }
+
+    public function testPromotesTraceIdToSentryTag(): void
+    {
+        $container = $this->bootKernel('trace_id.yml');
+        $container->get('public_logger')->error('boom');
+
+        $tags = $this->getFirstSentryEvent($container)->getTags();
+
+        $this->assertArrayHasKey('trace_id', $tags);
+        $this->assertSame(TestTraceIdProvider::TRACE_ID, $tags['trace_id']);
     }
 
     public function testOmitsTraceIdWhenNoProviderIsConfigured(): void
@@ -88,5 +116,21 @@ class FunctionalTraceIdTest extends TestCase
         $this->assertNotEmpty($messages, 'Expected the record to reach the Graylog handler');
 
         return $messages[0];
+    }
+
+    /**
+     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+     */
+    private function getFirstSentryEvent($container): Event
+    {
+        $container->get('sentry_client')->flush();
+
+        /** @var TestTransport $transport */
+        $transport = $container->get('sentry_transport');
+        $events = $transport->getEvents();
+
+        $this->assertNotEmpty($events, 'Expected the record to reach Sentry');
+
+        return $events[0];
     }
 }

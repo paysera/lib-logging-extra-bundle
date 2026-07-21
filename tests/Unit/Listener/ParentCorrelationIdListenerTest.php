@@ -48,38 +48,10 @@ class ParentCorrelationIdListenerTest extends TestCase
         $this->assertNull($this->provider->getParentCorrelationId());
     }
 
-    public function testResetsStaleValueWhenHeaderEmpty(): void
-    {
-        $this->provider->setParentCorrelationId('stale-id');
-
-        $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', '');
-
-        $event = $this->createRequestEvent($request, $this->mainRequestType());
-
-        $this->listener->onKernelRequest($event);
-
-        $this->assertNull($this->provider->getParentCorrelationId());
-    }
-
-    public function testResetsStaleValueWhenHeaderTooLong(): void
-    {
-        $this->provider->setParentCorrelationId('stale-id');
-
-        $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', str_repeat('a', 129));
-
-        $event = $this->createRequestEvent($request, $this->mainRequestType());
-
-        $this->listener->onKernelRequest($event);
-
-        $this->assertNull($this->provider->getParentCorrelationId());
-    }
-
     /**
-     * @dataProvider provideInvalidCharsetHeaders
+     * @dataProvider provideInvalidHeaders
      */
-    public function testResetsStaleValueWhenHeaderHasInvalidCharset(string $headerValue): void
+    public function testResetsStaleValueWhenHeaderIsInvalid(string $headerValue): void
     {
         $this->provider->setParentCorrelationId('stale-id');
 
@@ -107,9 +79,11 @@ class ParentCorrelationIdListenerTest extends TestCase
         $this->assertSame('fresh-id-456', $this->provider->getParentCorrelationId());
     }
 
-    public function provideInvalidCharsetHeaders(): array
+    public function provideInvalidHeaders(): array
     {
         return [
+            'empty' => [''],
+            'too long' => [str_repeat('a', 129)],
             'space' => ['parent id 123'],
             'newline injection' => ["parent-id\ninjected=value"],
             'tab' => ["parent-id\t123"],

@@ -95,31 +95,20 @@ class StdoutJsonFormatterTest extends TestCase
         ];
     }
 
-    public function testHoistsCorrelationIdFromExtraToTopLevel(): void
+    /**
+     * @dataProvider hoistedIdProvider
+     */
+    public function testHoistsIdFromExtraToTopLevel(string $field): void
     {
         $decoded = $this->decode([
-            'extra' => ['correlation_id' => 'app-target2-integration6a171447acf112.97444679', 'memory_peak' => '2 MB'],
+            'extra' => [$field => 'hoisted-value', 'memory_peak' => '2 MB'],
         ]);
 
-        $this->assertSame('app-target2-integration6a171447acf112.97444679', $decoded['correlation_id']);
+        $this->assertSame('hoisted-value', $decoded[$field]);
 
         $extra = $decoded['extra'];
         $this->assertIsArray($extra);
-        $this->assertArrayNotHasKey('correlation_id', $extra);
-        $this->assertSame('2 MB', $extra['memory_peak']);
-    }
-
-    public function testHoistsTraceIdFromExtraToTopLevel(): void
-    {
-        $decoded = $this->decode([
-            'extra' => ['trace_id' => 'trace-abc', 'memory_peak' => '2 MB'],
-        ]);
-
-        $this->assertSame('trace-abc', $decoded['trace_id']);
-
-        $extra = $decoded['extra'];
-        $this->assertIsArray($extra);
-        $this->assertArrayNotHasKey('trace_id', $extra);
+        $this->assertArrayNotHasKey($field, $extra);
         $this->assertSame('2 MB', $extra['memory_peak']);
     }
 
@@ -248,8 +237,6 @@ class StdoutJsonFormatterTest extends TestCase
      */
     public function testDropsHoistedIdsWhenOneAloneExceedsTheByteCap(string $field): void
     {
-        // correlation_id and trace_id are hoisted verbatim and are not truncatable, so they are the
-        // last fields dropped to keep the cap; every other remaining field is fixed-size.
         $line = rtrim($this->format([
             'message' => str_repeat('x', 1000),
             'extra' => [$field => str_repeat('c', 40000)],

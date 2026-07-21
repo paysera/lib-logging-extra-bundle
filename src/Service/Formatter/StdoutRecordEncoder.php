@@ -128,8 +128,8 @@ class StdoutRecordEncoder
         }
 
         // Everything left is fixed-size except correlation_id and trace_id, which an oversize value
-        // can reach at runtime (both are hoisted verbatim from `extra`). Drop them so the cap always
-        // holds. They go last so a request stays traceable on every record that can still carry them.
+        // can reach at runtime (both are hoisted verbatim from `extra`). Drop them last so the cap
+        // always holds.
         unset($fields['correlation_id'], $fields['trace_id']);
 
         return $this->toJson($fields);

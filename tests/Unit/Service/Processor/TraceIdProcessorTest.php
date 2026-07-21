@@ -14,18 +14,19 @@ class TraceIdProcessorTest extends TestCase
     use MonologRecordTrait;
 
     private TraceIdProviderInterface $provider;
+    private TraceIdProcessor $processor;
 
     protected function setUp(): void
     {
         $this->provider = $this->createMock(TraceIdProviderInterface::class);
+        $this->processor = new TraceIdProcessor($this->provider);
     }
 
     public function testAddsTraceIdWhenSet(): void
     {
         $this->provider->method('getTraceId')->willReturn('trace-id-123');
-        $processor = new TraceIdProcessor($this->provider);
 
-        $record = $this->invokeProcessor($processor);
+        $record = $this->invokeProcessor();
 
         $this->assertSame('trace-id-123', $this->getRecordExtra($record)['trace_id']);
     }
@@ -33,9 +34,8 @@ class TraceIdProcessorTest extends TestCase
     public function testDoesNotAddKeyWhenNull(): void
     {
         $this->provider->method('getTraceId')->willReturn(null);
-        $processor = new TraceIdProcessor($this->provider);
 
-        $record = $this->invokeProcessor($processor);
+        $record = $this->invokeProcessor();
 
         $this->assertArrayNotHasKey('trace_id', $this->getRecordExtra($record));
     }
@@ -43,9 +43,8 @@ class TraceIdProcessorTest extends TestCase
     public function testLeavesTheRestOfTheRecordUntouched(): void
     {
         $this->provider->method('getTraceId')->willReturn('trace-id-123');
-        $processor = new TraceIdProcessor($this->provider);
 
-        $record = $this->invokeProcessor($processor);
+        $record = $this->invokeProcessor();
 
         $this->assertSame('test message', $this->getRecordField($record, 'message'));
         $this->assertSame('test', $this->getRecordField($record, 'channel'));
@@ -55,8 +54,8 @@ class TraceIdProcessorTest extends TestCase
     /**
      * @return \Monolog\LogRecord|array<string, mixed>
      */
-    private function invokeProcessor(TraceIdProcessor $processor)
+    private function invokeProcessor()
     {
-        return ($processor)($this->buildLogRecord(['extra' => ['existing' => 'kept']]));
+        return ($this->processor)($this->buildLogRecord(['extra' => ['existing' => 'kept']]));
     }
 }
