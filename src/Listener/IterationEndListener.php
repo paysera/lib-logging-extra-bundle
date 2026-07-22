@@ -6,6 +6,7 @@ namespace Paysera\LoggingExtraBundle\Listener;
 
 use Paysera\LoggingExtraBundle\Service\CorrelationIdProvider;
 use Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider;
+use Paysera\LoggingExtraBundle\Service\TraceIdProvider;
 use Sentry\ClientInterface;
 
 /**
@@ -18,15 +19,18 @@ class IterationEndListener
 {
     private CorrelationIdProvider $correlationIdProvider;
     private ParentCorrelationIdProvider $parentCorrelationIdProvider;
+    private TraceIdProvider $traceIdProvider;
     private ?ClientInterface $sentryClient;
 
     public function __construct(
         CorrelationIdProvider $correlationIdProvider,
         ParentCorrelationIdProvider $parentCorrelationIdProvider,
+        TraceIdProvider $traceIdProvider,
         ?ClientInterface $sentryClient = null
     ) {
         $this->correlationIdProvider = $correlationIdProvider;
         $this->parentCorrelationIdProvider = $parentCorrelationIdProvider;
+        $this->traceIdProvider = $traceIdProvider;
         $this->sentryClient = $sentryClient;
     }
 
@@ -34,6 +38,7 @@ class IterationEndListener
     {
         $this->correlationIdProvider->incrementIdentifier();
         $this->parentCorrelationIdProvider->resetParentCorrelationId();
+        $this->traceIdProvider->resetTraceId();
         if ($this->sentryClient !== null) {
             $this->sentryClient->flush();
         }

@@ -1,9 +1,0 @@
-imports:
-    - { resource: basic.yml }
-
-services:
-    test_trace_id_provider:
-        class: Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTraceIdProvider
-
-paysera_logging_extra:
-    trace_id_provider: test_trace_id_provider

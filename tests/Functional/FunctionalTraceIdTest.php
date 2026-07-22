@@ -7,107 +7,65 @@ namespace Paysera\LoggingExtraBundle\Tests\Functional;
 use Gelf\Message;
 use Monolog\Handler\FingersCrossedHandler;
 use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Handler\TestGraylogHandler;
-use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTraceIdProvider;
 use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\Service\TestTransport;
-use Paysera\LoggingExtraBundle\Tests\Functional\Fixtures\TestKernel;
-use PHPUnit\Framework\TestCase;
 use Sentry\Event;
-use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use Symfony\Component\DependencyInjection\ResettableContainerInterface;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Contracts\Service\ResetInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class FunctionalTraceIdTest extends TestCase
+class FunctionalTraceIdTest extends FunctionalTestCase
 {
+    private const TRACE_ID = 'test-trace-id';
+
     /**
-     * @var TestKernel|null
+     * @var ContainerInterface
      */
-    private $kernel;
+    private $container;
 
-    protected function tearDown(): void
+    protected function setUp(): void
     {
-        if ($this->kernel === null) {
-            return;
-        }
+        parent::setUp();
 
-        // Boot may have failed before a container existed (testFailsToCompileWhenProviderIsMisspelled),
-        // so getContainer() can throw — shut the kernel down and reset the container only when there is one.
-        try {
-            $container = $this->kernel->getContainer();
-        } catch (\LogicException $exception) {
-            $container = null;
-        }
-
-        $this->kernel->shutdown();
-        if ($container instanceof ResettableContainerInterface || $container instanceof ResetInterface) {
-            $container->reset();
-        }
-
-        (new Filesystem())->remove($this->kernel->getCacheDir());
-        $this->kernel = null;
+        $this->container = $this->setUpContainer('basic.yml');
     }
 
-    public function testAddsTraceIdWhenProviderIsConfigured(): void
+    public function testAddsTraceIdToGraylogWhenSet(): void
     {
-        $container = $this->bootKernel('trace_id.yml');
-        $container->get('public_logger')->warning('WARN');
+        $this->container->get('public_trace_id_provider')->setTraceId(self::TRACE_ID);
 
-        $additionals = $this->getFirstGraylogMessage($container)->getAllAdditionals();
+        $this->container->get('public_logger')->warning('WARN');
+
+        $additionals = $this->getFirstGraylogMessage()->getAllAdditionals();
 
         $this->assertArrayHasKey('trace_id', $additionals);
-        $this->assertSame(TestTraceIdProvider::TRACE_ID, $additionals['trace_id']);
+        $this->assertSame(self::TRACE_ID, $additionals['trace_id']);
     }
 
     public function testPromotesTraceIdToSentryTag(): void
     {
-        $container = $this->bootKernel('trace_id.yml');
-        $container->get('public_logger')->error('boom');
+        $this->container->get('public_trace_id_provider')->setTraceId(self::TRACE_ID);
 
-        $tags = $this->getFirstSentryEvent($container)->getTags();
+        $this->container->get('public_logger')->error('boom');
+
+        $tags = $this->getFirstSentryEvent()->getTags();
 
         $this->assertArrayHasKey('trace_id', $tags);
-        $this->assertSame(TestTraceIdProvider::TRACE_ID, $tags['trace_id']);
+        $this->assertSame(self::TRACE_ID, $tags['trace_id']);
     }
 
-    public function testOmitsTraceIdWhenNoProviderIsConfigured(): void
+    public function testOmitsTraceIdWhenNotSet(): void
     {
-        $container = $this->bootKernel('basic.yml');
-        $container->get('public_logger')->warning('WARN');
+        $this->container->get('public_logger')->warning('WARN');
 
-        $additionals = $this->getFirstGraylogMessage($container)->getAllAdditionals();
+        $additionals = $this->getFirstGraylogMessage()->getAllAdditionals();
 
         $this->assertArrayNotHasKey('trace_id', $additionals);
     }
 
-    public function testFailsToCompileWhenProviderIsMisspelled(): void
-    {
-        $this->expectException(ServiceNotFoundException::class);
-        $this->expectExceptionMessage('test_trace_id_provider_typo');
-
-        $this->bootKernel('trace_id_misspelled_provider.yml');
-    }
-
-    /**
-     * @return \Symfony\Component\DependencyInjection\ContainerInterface
-     */
-    private function bootKernel(string $testCase)
-    {
-        $this->kernel = new TestKernel($testCase);
-        (new Filesystem())->remove($this->kernel->getCacheDir());
-        $this->kernel->boot();
-
-        return $this->kernel->getContainer();
-    }
-
-    /**
-     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
-     */
-    private function getFirstGraylogMessage($container): Message
+    private function getFirstGraylogMessage(): Message
     {
         /** @var TestGraylogHandler $graylogHandler */
-        $graylogHandler = $container->get('graylog_handler');
+        $graylogHandler = $this->container->get('graylog_handler');
         /** @var FingersCrossedHandler $mainHandler */
-        $mainHandler = $container->get('main_handler');
+        $mainHandler = $this->container->get('main_handler');
 
         $messages = $graylogHandler->flushPublishedMessages();
         $mainHandler->close();
@@ -118,15 +76,12 @@ class FunctionalTraceIdTest extends TestCase
         return $messages[0];
     }
 
-    /**
-     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
-     */
-    private function getFirstSentryEvent($container): Event
+    private function getFirstSentryEvent(): Event
     {
-        $container->get('sentry_client')->flush();
+        $this->container->get('sentry_client')->flush();
 
         /** @var TestTransport $transport */
-        $transport = $container->get('sentry_transport');
+        $transport = $this->container->get('sentry_transport');
         $events = $transport->getEvents();
 
         $this->assertNotEmpty($events, 'Expected the record to reach Sentry');

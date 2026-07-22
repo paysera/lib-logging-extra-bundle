@@ -1,7 +1,0 @@
-imports:
-    - { resource: basic.yml }
-
-# Points at a service id that is never defined, so container compilation fails with a
-# ServiceNotFoundException — the guard that a misconfigured trace_id_provider fails loud.
-paysera_logging_extra:
-    trace_id_provider: test_trace_id_provider_typo

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Service\Processor;
 
 use Monolog\Processor\ProcessorInterface;
-use Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface;
+use Paysera\LoggingExtraBundle\Service\TraceIdProvider;
 
 if (class_exists('Monolog\LogRecord')) {
     // Monolog v3+ - has LogRecord class with typed ProcessorInterface
@@ -13,7 +13,7 @@ if (class_exists('Monolog\LogRecord')) {
     {
         private $traceIdProvider;
 
-        public function __construct(TraceIdProviderInterface $traceIdProvider)
+        public function __construct(TraceIdProvider $traceIdProvider)
         {
             $this->traceIdProvider = $traceIdProvider;
         }
@@ -43,7 +43,7 @@ if (class_exists('Monolog\LogRecord')) {
     {
         private $traceIdProvider;
 
-        public function __construct(TraceIdProviderInterface $traceIdProvider)
+        public function __construct(TraceIdProvider $traceIdProvider)
         {
             $this->traceIdProvider = $traceIdProvider;
         }

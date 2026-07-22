@@ -22,21 +22,6 @@ class Configuration implements ConfigurationInterface
         $children = $rootNode->children();
         $children->scalarNode('application_name')->isRequired();
         $children->arrayNode('grouped_exceptions')->prototype('scalar');
-        $children->scalarNode('trace_id_provider')
-            ->defaultNull()
-            ->beforeNormalization()
-                ->ifString()
-                ->then(static function (string $value): string {
-                    return trim($value);
-                })
-            ->end()
-            ->validate()
-                ->ifTrue(static function ($value): bool {
-                    return $value !== null && (string) $value === '';
-                })
-                ->thenInvalid('The trace_id_provider must be a non-empty service id, got %s.')
-            ->end()
-        ;
 
         return $treeBuilder;
     }

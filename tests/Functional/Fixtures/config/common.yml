@@ -56,6 +56,9 @@ services:
     public_correlation_id_provider:
         alias: 'paysera_logging_extra.correlation_id_provider'
         public: true
+    public_trace_id_provider:
+        alias: 'Paysera\LoggingExtraBundle\Service\TraceIdProvider'
+        public: true
     annotation_reader:
         class: Doctrine\Common\Annotations\AnnotationReader
         public: true

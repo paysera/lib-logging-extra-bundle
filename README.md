@@ -15,7 +15,7 @@ Monolog already offers integration with both Sentry and Graylog. This bundle re-
 the following features:
 - clearer formatting for Graylog messages;
 - adds correlation_id to correlate messages in Sentry with messages in Graylog from the same process;
-- adds trace_id to correlate messages of one request across every service it touches (opt-in);
+- adds trace_id to correlate messages of one request across every service it touches;
 - allows grouping some exceptions by their class, independently from where they were thrown at or what are their message;
 - removes root prefix from messages (usually included in some exception messages);
 - maps context to be available with logged sentry event. 
@@ -106,40 +106,15 @@ The `trace_id` field names an **entire request across every service it touches**
 the inbound one as `parent_corr_id`. So `correlation_id` finds the messages of one process, while
 `trace_id` finds the messages of one request everywhere it went.
 
-The bundle does not decide where a trace id comes from — your application does, by registering a service
-implementing `TraceIdProviderInterface` and pointing `trace_id_provider` at it:
+It works out of the box — there is nothing to configure. The bundle reads the `Paysera-Trace-Id` header
+the public gateway stamps on every inbound request and records it as `trace_id` on every log line and as
+a searchable Sentry tag. Bump the library and each service is traceable; no per-service code is needed.
 
-```php
-<?php
-
-namespace App\Service;
-
-use Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface;
-
-class TraceIdProvider implements TraceIdProviderInterface
-{
-    // Return the trace id for the current request, or null when there is none
-    // (for example on a console command, or before the request is received).
-    public function getTraceId(): ?string
-    {
-        // ... your own resolution: an incoming header, an OpenTelemetry span, a generated id, ...
-    }
-}
-```
-
-```yaml
-services:
-    App\Service\TraceIdProvider: ~
-
-paysera_logging_extra:
-    application_name: app-something
-    trace_id_provider: App\Service\TraceIdProvider   # service id of your provider
-```
-
-`trace_id_provider` is optional. Leave it out and no `trace_id` is recorded — the processor is not
-registered at all, and everything else is unaffected. When it *is* set, the service id must exist:
-a misspelled one fails container compilation rather than silently logging without `trace_id`.
-Records where the provider returns `null` simply carry no `trace_id` field.
+The incoming value is treated as untrusted: it is recorded only when non-empty, at most 200 characters
+(Sentry's tag-value limit), and made up of `[A-Za-z0-9._-]`. Anything else is ignored, so a hostile
+header cannot inject control characters or bloat log lines. Requests without the header (and console
+commands) simply carry no `trace_id` field, and the id is reset between reused iterations of a
+long-running process (PHP-FPM, RoadRunner) so it cannot leak from one request into the next.
 
 ### Dual-write to stdout (VictoriaLogs)
 
@@ -167,12 +142,13 @@ monolog:
 Each stdout line is one compact JSON object: `timestamp` (ISO-8601, microseconds + offset),
 `application_name`, `channel`, syslog `level` (DEBUG=7 … EMERGENCY=0), `level_name`, `message`,
 optional `full_message` (the raw original when the message is exception-shaped), optional
-`context`/`extra`, and top-level `correlation_id` and `trace_id` (both hoisted from `extra`, and both
-omitted when absent). Lines are capped at 32766 bytes; oversize records stay single-line, are flagged
-`truncated`, and are shrunk by dropping `full_message` first, then `context`/`extra`, then truncating
-`message` UTF-8-safely, and finally dropping `correlation_id`/`trace_id`. The two ids are hoisted so
-they survive the `extra` drop: oversize records are mostly exception dumps, which is exactly where a
-request needs to stay traceable.
+`context`/`extra`, and top-level `correlation_id`, `parent_corr_id` and `trace_id` (all hoisted from
+`extra`, and each omitted when absent). Lines are capped at 32766 bytes; oversize records stay
+single-line, are flagged `truncated`, and are shrunk by dropping `full_message` first, then
+`context`/`extra`, then truncating `message` UTF-8-safely, and finally dropping
+`correlation_id`/`parent_corr_id`/`trace_id`. The three ids are hoisted so they survive the `extra`
+drop: oversize records are mostly exception dumps, which is exactly where a request needs to stay
+traceable.
 
 Exception-shaped messages (`RuntimeException: boom in /app/src/Foo.php:42`) are split into a short
 `message` and the raw `full_message`, identically to the canonical formatter in

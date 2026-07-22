@@ -223,12 +223,13 @@ class StdoutJsonFormatterTest extends TestCase
     {
         $decoded = $this->decode([
             'message' => str_repeat('x', 40000),
-            'extra' => ['correlation_id' => 'corr-1', 'trace_id' => 'trace-1'],
+            'extra' => ['correlation_id' => 'corr-1', 'parent_corr_id' => 'parent-1', 'trace_id' => 'trace-1'],
         ]);
 
         $this->assertTrue($decoded['truncated']);
         $this->assertArrayNotHasKey('extra', $decoded);
         $this->assertSame('corr-1', $decoded['correlation_id']);
+        $this->assertSame('parent-1', $decoded['parent_corr_id']);
         $this->assertSame('trace-1', $decoded['trace_id']);
     }
 
@@ -257,6 +258,7 @@ class StdoutJsonFormatterTest extends TestCase
     {
         return [
             'correlation_id' => ['correlation_id'],
+            'parent_corr_id' => ['parent_corr_id'],
             'trace_id' => ['trace_id'],
         ];
     }

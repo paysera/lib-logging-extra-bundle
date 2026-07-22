@@ -11,54 +11,28 @@ use Symfony\Component\Config\Definition\Processor;
 
 class ConfigurationTest extends TestCase
 {
-    /**
-     * @dataProvider traceIdProviderProvider
-     *
-     * @param array<string, mixed> $input
-     */
-    public function testResolvesTraceIdProvider(array $input, ?string $expected): void
+    public function testKeepsApplicationName(): void
     {
-        $config = $this->process(['application_name' => 'app-something'] + $input);
+        $config = $this->process(['application_name' => 'app-something']);
 
-        $this->assertSame($expected, $config['trace_id_provider']);
+        $this->assertSame('app-something', $config['application_name']);
     }
 
-    /**
-     * @return array<string, array{array<string, mixed>, string|null}>
-     */
-    public static function traceIdProviderProvider(): array
-    {
-        return [
-            'omitted defaults to null' => [[], null],
-            'explicit null stays null' => [['trace_id_provider' => null], null],
-            'configured id is kept' => [['trace_id_provider' => 'app.trace_id_provider'], 'app.trace_id_provider'],
-            'surrounding whitespace is trimmed' => [['trace_id_provider' => '  app.trace_id_provider  '], 'app.trace_id_provider'],
-        ];
-    }
-
-    /**
-     * @dataProvider blankTraceIdProviderProvider
-     */
-    public function testRejectsBlankTraceIdProvider(string $value): void
+    public function testRequiresApplicationName(): void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage('must be a non-empty service id');
 
-        $this->process([
-            'application_name' => 'app-something',
-            'trace_id_provider' => $value,
-        ]);
+        $this->process([]);
     }
 
-    /**
-     * @return array<string, array{string}>
-     */
-    public static function blankTraceIdProviderProvider(): array
+    public function testKeepsGroupedExceptions(): void
     {
-        return [
-            'empty' => [''],
-            'whitespace' => ['   '],
-        ];
+        $config = $this->process([
+            'application_name' => 'app-something',
+            'grouped_exceptions' => ['Doctrine\DBAL\ConnectionException'],
+        ]);
+
+        $this->assertSame(['Doctrine\DBAL\ConnectionException'], $config['grouped_exceptions']);
     }
 
     /**

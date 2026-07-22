@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Paysera\LoggingExtraBundle\Tests\Unit\Service\Processor;
 
 use Paysera\LoggingExtraBundle\Service\Processor\TraceIdProcessor;
-use Paysera\LoggingExtraBundle\Service\TraceIdProviderInterface;
+use Paysera\LoggingExtraBundle\Service\TraceIdProvider;
 use Paysera\LoggingExtraBundle\Tests\Unit\Support\MonologRecordTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -13,18 +13,18 @@ class TraceIdProcessorTest extends TestCase
 {
     use MonologRecordTrait;
 
-    private TraceIdProviderInterface $provider;
+    private TraceIdProvider $provider;
     private TraceIdProcessor $processor;
 
     protected function setUp(): void
     {
-        $this->provider = $this->createMock(TraceIdProviderInterface::class);
+        $this->provider = new TraceIdProvider();
         $this->processor = new TraceIdProcessor($this->provider);
     }
 
     public function testAddsTraceIdWhenSet(): void
     {
-        $this->provider->method('getTraceId')->willReturn('trace-id-123');
+        $this->provider->setTraceId('trace-id-123');
 
         $record = $this->invokeProcessor();
 
@@ -33,8 +33,6 @@ class TraceIdProcessorTest extends TestCase
 
     public function testDoesNotAddKeyWhenNull(): void
     {
-        $this->provider->method('getTraceId')->willReturn(null);
-
         $record = $this->invokeProcessor();
 
         $this->assertArrayNotHasKey('trace_id', $this->getRecordExtra($record));
@@ -42,7 +40,7 @@ class TraceIdProcessorTest extends TestCase
 
     public function testLeavesTheRestOfTheRecordUntouched(): void
     {
-        $this->provider->method('getTraceId')->willReturn('trace-id-123');
+        $this->provider->setTraceId('trace-id-123');
 
         $record = $this->invokeProcessor();
 
