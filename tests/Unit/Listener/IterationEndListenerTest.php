@@ -24,6 +24,7 @@ class IterationEndListenerTest extends TestCase
         $listener = new IterationEndListener(
             $correlationIdProvider,
             $parentCorrelationIdProvider,
+            null,
             $traceIdProvider
         );
 
@@ -36,11 +37,14 @@ class IterationEndListenerTest extends TestCase
         $this->assertNull($traceIdProvider->getTraceId());
     }
 
-    public function testAfterIterationFlushesSentryClient(): void
+    /**
+     * @dataProvider provideTraceIdProviderArgument
+     */
+    public function testAfterIterationFlushesSentryClient(bool $withTraceIdProvider): void
     {
         $correlationIdProvider = new CorrelationIdProvider('test');
         $parentCorrelationIdProvider = new ParentCorrelationIdProvider();
-        $traceIdProvider = new TraceIdProvider();
+        $parentCorrelationIdProvider->setParentCorrelationId('parent-id-123');
 
         $sentryClient = $this->createMock(ClientInterface::class);
         $sentryClient->expects($this->once())->method('flush');
@@ -48,28 +52,20 @@ class IterationEndListenerTest extends TestCase
         $listener = new IterationEndListener(
             $correlationIdProvider,
             $parentCorrelationIdProvider,
-            $traceIdProvider,
-            $sentryClient
-        );
-
-        $listener->afterIteration();
-    }
-
-    public function testAfterIterationWorksWithoutSentryClient(): void
-    {
-        $correlationIdProvider = new CorrelationIdProvider('test');
-        $parentCorrelationIdProvider = new ParentCorrelationIdProvider();
-        $traceIdProvider = new TraceIdProvider();
-
-        $listener = new IterationEndListener(
-            $correlationIdProvider,
-            $parentCorrelationIdProvider,
-            $traceIdProvider
+            $sentryClient,
+            $withTraceIdProvider ? new TraceIdProvider() : null
         );
 
         $listener->afterIteration();
 
         $this->assertNull($parentCorrelationIdProvider->getParentCorrelationId());
-        $this->assertNull($traceIdProvider->getTraceId());
+    }
+
+    public function provideTraceIdProviderArgument(): array
+    {
+        return [
+            'current signature' => [true],
+            'pre-3.5.0 signature without trace id provider' => [false],
+        ];
     }
 }

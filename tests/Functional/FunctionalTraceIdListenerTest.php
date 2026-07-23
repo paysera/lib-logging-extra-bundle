@@ -31,19 +31,23 @@ class FunctionalTraceIdListenerTest extends FunctionalTestCase
         $this->assertSame('gateway-trace-id-123', $this->traceIdProvider->getTraceId());
     }
 
-    public function testLeavesTraceIdUnsetWhenHeaderAbsent(): void
+    /**
+     * @dataProvider provideRequestsWithoutUsableTraceId
+     *
+     * @param array<string, string> $headers
+     */
+    public function testLeavesTraceIdUnset(array $headers): void
     {
-        $this->handleRequest($this->createRequest('GET', '/index'));
+        $this->handleRequest($this->createRequest('GET', '/index', null, $headers));
 
         $this->assertNull($this->traceIdProvider->getTraceId());
     }
 
-    public function testIgnoresInvalidTraceIdHeader(): void
+    public function provideRequestsWithoutUsableTraceId(): array
     {
-        $this->handleRequest($this->createRequest('GET', '/index', null, [
-            TraceIdListener::HEADER_NAME => 'invalid trace id',
-        ]));
-
-        $this->assertNull($this->traceIdProvider->getTraceId());
+        return [
+            'header absent' => [[]],
+            'header invalid' => [[TraceIdListener::HEADER_NAME => 'invalid trace id']],
+        ];
     }
 }

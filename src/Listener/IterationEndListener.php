@@ -19,26 +19,28 @@ class IterationEndListener
 {
     private CorrelationIdProvider $correlationIdProvider;
     private ParentCorrelationIdProvider $parentCorrelationIdProvider;
-    private TraceIdProvider $traceIdProvider;
     private ?ClientInterface $sentryClient;
+    private ?TraceIdProvider $traceIdProvider;
 
     public function __construct(
         CorrelationIdProvider $correlationIdProvider,
         ParentCorrelationIdProvider $parentCorrelationIdProvider,
-        TraceIdProvider $traceIdProvider,
-        ?ClientInterface $sentryClient = null
+        ?ClientInterface $sentryClient = null,
+        ?TraceIdProvider $traceIdProvider = null
     ) {
         $this->correlationIdProvider = $correlationIdProvider;
         $this->parentCorrelationIdProvider = $parentCorrelationIdProvider;
-        $this->traceIdProvider = $traceIdProvider;
         $this->sentryClient = $sentryClient;
+        $this->traceIdProvider = $traceIdProvider;
     }
 
     public function afterIteration(): void
     {
         $this->correlationIdProvider->incrementIdentifier();
         $this->parentCorrelationIdProvider->resetParentCorrelationId();
-        $this->traceIdProvider->resetTraceId();
+        if ($this->traceIdProvider !== null) {
+            $this->traceIdProvider->resetTraceId();
+        }
         if ($this->sentryClient !== null) {
             $this->sentryClient->flush();
         }

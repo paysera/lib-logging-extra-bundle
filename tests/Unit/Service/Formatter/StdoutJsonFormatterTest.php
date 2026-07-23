@@ -42,7 +42,12 @@ class StdoutJsonFormatterTest extends TestCase
     {
         $line = rtrim($this->format([
             'context' => ['client_id' => 7],
-            'extra' => ['correlation_id' => 'corr-1', 'trace_id' => 'trace-1', 'memory_peak' => '2 MB'],
+            'extra' => [
+                'trace_id' => 'trace-1',
+                'parent_corr_id' => 'parent-1',
+                'correlation_id' => 'corr-1',
+                'memory_peak' => '2 MB',
+            ],
         ]), "\n");
 
         $decoded = json_decode($line, true);
@@ -58,10 +63,11 @@ class StdoutJsonFormatterTest extends TestCase
                 'context',
                 'extra',
                 'correlation_id',
+                'parent_corr_id',
                 'trace_id',
             ],
             array_keys($decoded),
-            'Field order must match the canonical evp StdoutJsonFormatter, with trace_id appended'
+            'Field order must match the canonical evp StdoutJsonFormatter, with parent_corr_id and trace_id appended'
         );
     }
 

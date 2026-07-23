@@ -16,13 +16,24 @@ class TraceIdProviderTest extends TestCase
         $this->assertNull($provider->getTraceId());
     }
 
-    public function testSetAndGet(): void
+    /**
+     * @dataProvider provideValidValues
+     */
+    public function testSetAndGet(string $value): void
     {
         $provider = new TraceIdProvider();
 
-        $provider->setTraceId('abc-123');
+        $provider->setTraceId($value);
 
-        $this->assertSame('abc-123', $provider->getTraceId());
+        $this->assertSame($value, $provider->getTraceId());
+    }
+
+    public function provideValidValues(): array
+    {
+        return [
+            'plain id' => ['abc-123'],
+            'max length' => [str_repeat('a', 200)],
+        ];
     }
 
     public function testResetTraceId(): void
@@ -33,16 +44,6 @@ class TraceIdProviderTest extends TestCase
         $provider->resetTraceId();
 
         $this->assertNull($provider->getTraceId());
-    }
-
-    public function testAcceptsMaxLengthValue(): void
-    {
-        $provider = new TraceIdProvider();
-        $value = str_repeat('a', 200);
-
-        $provider->setTraceId($value);
-
-        $this->assertSame($value, $provider->getTraceId());
     }
 
     /**

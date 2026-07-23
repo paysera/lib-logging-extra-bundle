@@ -23,16 +23,27 @@ class ParentCorrelationIdListenerTest extends TestCase
         $this->listener = new ParentCorrelationIdListener($this->provider);
     }
 
-    public function testSetsParentCorrelationIdFromHeader(): void
+    /**
+     * @dataProvider provideValidHeaders
+     */
+    public function testSetsParentCorrelationIdFromHeader(string $headerValue): void
     {
         $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', 'parent-id-123');
+        $request->headers->set('Paysera-Correlation-Id', $headerValue);
 
         $event = $this->createRequestEvent($request, $this->mainRequestType());
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertSame('parent-id-123', $this->provider->getParentCorrelationId());
+        $this->assertSame($headerValue, $this->provider->getParentCorrelationId());
+    }
+
+    public function provideValidHeaders(): array
+    {
+        return [
+            'plain id' => ['parent-id-123'],
+            'max length' => [str_repeat('a', 128)],
+        ];
     }
 
     public function testResetsStaleValueWhenHeaderAbsent(): void
@@ -90,20 +101,6 @@ class ParentCorrelationIdListenerTest extends TestCase
             'structural punctuation' => ['parent-id{"key":"value"}'],
             'slash' => ['parent/id/123'],
         ];
-    }
-
-    public function testAcceptsMaxLengthHeader(): void
-    {
-        $value = str_repeat('a', 128);
-
-        $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', $value);
-
-        $event = $this->createRequestEvent($request, $this->mainRequestType());
-
-        $this->listener->onKernelRequest($event);
-
-        $this->assertSame($value, $this->provider->getParentCorrelationId());
     }
 
     public function testIgnoresSubRequests(): void

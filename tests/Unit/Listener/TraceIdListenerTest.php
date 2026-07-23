@@ -22,16 +22,27 @@ class TraceIdListenerTest extends TestCase
         $this->listener = new TraceIdListener($this->provider);
     }
 
-    public function testSetsTraceIdFromHeader(): void
+    /**
+     * @dataProvider provideValidHeaders
+     */
+    public function testSetsTraceIdFromHeader(string $headerValue): void
     {
         $request = new Request();
-        $request->headers->set(TraceIdListener::HEADER_NAME, 'trace-id-123');
+        $request->headers->set(TraceIdListener::HEADER_NAME, $headerValue);
 
         $event = $this->createRequestEvent($request, $this->mainRequestType());
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertSame('trace-id-123', $this->provider->getTraceId());
+        $this->assertSame($headerValue, $this->provider->getTraceId());
+    }
+
+    public function provideValidHeaders(): array
+    {
+        return [
+            'plain id' => ['trace-id-123'],
+            'max length' => [str_repeat('a', 200)],
+        ];
     }
 
     public function testResetsStaleValueWhenHeaderAbsent(): void
@@ -89,20 +100,6 @@ class TraceIdListenerTest extends TestCase
             'structural punctuation' => ['trace-id{"key":"value"}'],
             'slash' => ['trace/id/123'],
         ];
-    }
-
-    public function testAcceptsMaxLengthHeader(): void
-    {
-        $value = str_repeat('a', 200);
-
-        $request = new Request();
-        $request->headers->set(TraceIdListener::HEADER_NAME, $value);
-
-        $event = $this->createRequestEvent($request, $this->mainRequestType());
-
-        $this->listener->onKernelRequest($event);
-
-        $this->assertSame($value, $this->provider->getTraceId());
     }
 
     public function testIgnoresSubRequests(): void

@@ -12,8 +12,8 @@
 
             <argument type="service" id="paysera_logging_extra.correlation_id_provider"/>
             <argument type="service" id="Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider"/>
-            <argument type="service" id="Paysera\LoggingExtraBundle\Service\TraceIdProvider"/>
             <argument type="service" id="Sentry\ClientInterface" on-invalid="null"/>
+            <argument type="service" id="Paysera\LoggingExtraBundle\Service\TraceIdProvider"/>
         </service>
 
         <service id="paysera_logging_extra.listener.correlation_id"
