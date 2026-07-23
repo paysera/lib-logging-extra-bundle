@@ -6,16 +6,18 @@ namespace Paysera\LoggingExtraBundle\Tests\Unit\Service\Formatter;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Paysera\LoggingExtraBundle\Service\ExceptionMessageParser;
 use Paysera\LoggingExtraBundle\Service\Formatter\StdoutJsonFormatter;
 use Paysera\LoggingExtraBundle\Service\Formatter\StdoutRecordEncoder;
+use Paysera\LoggingExtraBundle\Tests\Unit\Support\MonologRecordTrait;
 use PHPUnit\Framework\TestCase;
 
 class StdoutJsonFormatterTest extends TestCase
 {
+    use MonologRecordTrait;
+
     private const APPLICATION_NAME = 'app-target2-integration';
 
     public function testFormatsRecordAsSingleCompactJsonLine(): void
@@ -40,7 +42,12 @@ class StdoutJsonFormatterTest extends TestCase
     {
         $line = rtrim($this->format([
             'context' => ['client_id' => 7],
-            'extra' => ['correlation_id' => 'corr-1', 'memory_peak' => '2 MB'],
+            'extra' => [
+                'trace_id' => 'trace-1',
+                'parent_corr_id' => 'parent-1',
+                'correlation_id' => 'corr-1',
+                'memory_peak' => '2 MB',
+            ],
         ]), "\n");
 
         $decoded = json_decode($line, true);
@@ -56,9 +63,11 @@ class StdoutJsonFormatterTest extends TestCase
                 'context',
                 'extra',
                 'correlation_id',
+                'parent_corr_id',
+                'trace_id',
             ],
             array_keys($decoded),
-            'Field order must match the canonical evp StdoutJsonFormatter'
+            'Field order must match the canonical evp StdoutJsonFormatter, with parent_corr_id and trace_id appended'
         );
     }
 
@@ -92,17 +101,20 @@ class StdoutJsonFormatterTest extends TestCase
         ];
     }
 
-    public function testHoistsCorrelationIdFromExtraToTopLevel(): void
+    /**
+     * @dataProvider hoistedIdProvider
+     */
+    public function testHoistsIdFromExtraToTopLevel(string $field): void
     {
         $decoded = $this->decode([
-            'extra' => ['correlation_id' => 'app-target2-integration6a171447acf112.97444679', 'memory_peak' => '2 MB'],
+            'extra' => [$field => 'hoisted-value', 'memory_peak' => '2 MB'],
         ]);
 
-        $this->assertSame('app-target2-integration6a171447acf112.97444679', $decoded['correlation_id']);
+        $this->assertSame('hoisted-value', $decoded[$field]);
 
         $extra = $decoded['extra'];
         $this->assertIsArray($extra);
-        $this->assertArrayNotHasKey('correlation_id', $extra);
+        $this->assertArrayNotHasKey($field, $extra);
         $this->assertSame('2 MB', $extra['memory_peak']);
     }
 
@@ -171,6 +183,7 @@ class StdoutJsonFormatterTest extends TestCase
         $this->assertArrayNotHasKey('context', $decoded);
         $this->assertArrayNotHasKey('extra', $decoded);
         $this->assertArrayNotHasKey('correlation_id', $decoded);
+        $this->assertArrayNotHasKey('trace_id', $decoded);
     }
 
     /**
@@ -212,13 +225,28 @@ class StdoutJsonFormatterTest extends TestCase
         $this->assertArrayNotHasKey('extra', $decoded);
     }
 
-    public function testDropsCorrelationIdWhenItAloneExceedsTheByteCap(): void
+    public function testKeepsHoistedIdsOnOversizeRecords(): void
     {
-        // correlation_id is hoisted verbatim and is not truncatable, so it is the last field dropped
-        // to keep the cap; every other remaining field is fixed-size.
+        $decoded = $this->decode([
+            'message' => str_repeat('x', 40000),
+            'extra' => ['correlation_id' => 'corr-1', 'parent_corr_id' => 'parent-1', 'trace_id' => 'trace-1'],
+        ]);
+
+        $this->assertTrue($decoded['truncated']);
+        $this->assertArrayNotHasKey('extra', $decoded);
+        $this->assertSame('corr-1', $decoded['correlation_id']);
+        $this->assertSame('parent-1', $decoded['parent_corr_id']);
+        $this->assertSame('trace-1', $decoded['trace_id']);
+    }
+
+    /**
+     * @dataProvider hoistedIdProvider
+     */
+    public function testDropsHoistedIdsWhenOneAloneExceedsTheByteCap(string $field): void
+    {
         $line = rtrim($this->format([
             'message' => str_repeat('x', 1000),
-            'extra' => ['correlation_id' => str_repeat('c', 40000)],
+            'extra' => [$field => str_repeat('c', 40000)],
         ]), "\n");
 
         $this->assertLessThanOrEqual(StdoutRecordEncoder::MAX_JSON_BYTE_COUNT, strlen($line));
@@ -226,7 +254,19 @@ class StdoutJsonFormatterTest extends TestCase
         $decoded = json_decode($line, true);
         $this->assertIsArray($decoded);
         $this->assertTrue($decoded['truncated']);
-        $this->assertArrayNotHasKey('correlation_id', $decoded);
+        $this->assertArrayNotHasKey($field, $decoded);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function hoistedIdProvider(): array
+    {
+        return [
+            'correlation_id' => ['correlation_id'],
+            'parent_corr_id' => ['parent_corr_id'],
+            'trace_id' => ['trace_id'],
+        ];
     }
 
     public function testFormatBatchEmitsOneLinePerRecord(): void
@@ -314,8 +354,8 @@ class StdoutJsonFormatterTest extends TestCase
     }
 
     /**
-     * Builds a Monolog record in the shape the installed Monolog major expects
-     * (LogRecord on v3, associative array on v1/v2).
+     * Builds a Monolog record with this formatter's default shape, deferring the
+     * v1/v3 branching to MonologRecordTrait.
      *
      * @param array<string, mixed> $overrides
      *
@@ -323,26 +363,10 @@ class StdoutJsonFormatterTest extends TestCase
      */
     private function record(array $overrides = [])
     {
-        $datetime = $overrides['datetime'] ?? new DateTimeImmutable('2026-06-10T16:03:21.123456+03:00');
-        $channel = $overrides['channel'] ?? 'app';
-        $level = $overrides['level'] ?? Logger::INFO;
-        $levelName = $overrides['level_name'] ?? 'INFO';
-        $message = $overrides['message'] ?? 'Example message';
-        $context = $overrides['context'] ?? [];
-        $extra = $overrides['extra'] ?? [];
-
-        if (class_exists(LogRecord::class)) {
-            return new LogRecord($datetime, $channel, Level::from($level), $message, $context, $extra);
-        }
-
-        return [
-            'message' => $message,
-            'context' => $context,
-            'level' => $level,
-            'level_name' => $levelName,
-            'channel' => $channel,
-            'datetime' => $datetime,
-            'extra' => $extra,
-        ];
+        return $this->buildLogRecord($overrides + [
+            'datetime' => new DateTimeImmutable('2026-06-10T16:03:21.123456+03:00'),
+            'channel' => 'app',
+            'message' => 'Example message',
+        ]);
     }
 }

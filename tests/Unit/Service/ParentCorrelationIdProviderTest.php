@@ -16,13 +16,24 @@ class ParentCorrelationIdProviderTest extends TestCase
         $this->assertNull($provider->getParentCorrelationId());
     }
 
-    public function testSetAndGet(): void
+    /**
+     * @dataProvider provideValidValues
+     */
+    public function testSetAndGet(string $value): void
     {
         $provider = new ParentCorrelationIdProvider();
 
-        $provider->setParentCorrelationId('abc-123');
+        $provider->setParentCorrelationId($value);
 
-        $this->assertSame('abc-123', $provider->getParentCorrelationId());
+        $this->assertSame($value, $provider->getParentCorrelationId());
+    }
+
+    public function provideValidValues(): array
+    {
+        return [
+            'plain id' => ['abc-123'],
+            'max length' => [str_repeat('a', 128)],
+        ];
     }
 
     public function testResetParentCorrelationId(): void
@@ -33,16 +44,6 @@ class ParentCorrelationIdProviderTest extends TestCase
         $provider->resetParentCorrelationId();
 
         $this->assertNull($provider->getParentCorrelationId());
-    }
-
-    public function testAcceptsMaxLengthValue(): void
-    {
-        $provider = new ParentCorrelationIdProvider();
-        $value = str_repeat('a', 128);
-
-        $provider->setParentCorrelationId($value);
-
-        $this->assertSame($value, $provider->getParentCorrelationId());
     }
 
     /**

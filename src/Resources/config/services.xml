@@ -16,6 +16,8 @@
 
         <service id="Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider"/>
 
+        <service id="Paysera\LoggingExtraBundle\Service\TraceIdProvider"/>
+
         <service id="paysera_logging_extra.sentry_handler" alias="paysera_logging_extra.handler.sentry"/>
     </services>
 </container>

@@ -4,51 +4,50 @@ declare(strict_types=1);
 
 namespace Paysera\LoggingExtraBundle\Tests\Unit\Listener;
 
-use Paysera\LoggingExtraBundle\Listener\ParentCorrelationIdListener;
-use Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider;
+use Paysera\LoggingExtraBundle\Listener\TraceIdListener;
+use Paysera\LoggingExtraBundle\Service\TraceIdProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
-class ParentCorrelationIdListenerTest extends TestCase
+class TraceIdListenerTest extends TestCase
 {
-    private ParentCorrelationIdProvider $provider;
-    private ParentCorrelationIdListener $listener;
+    private TraceIdProvider $provider;
+    private TraceIdListener $listener;
 
     protected function setUp(): void
     {
-        $this->provider = new ParentCorrelationIdProvider();
-        $this->listener = new ParentCorrelationIdListener($this->provider);
+        $this->provider = new TraceIdProvider();
+        $this->listener = new TraceIdListener($this->provider);
     }
 
     /**
      * @dataProvider provideValidHeaders
      */
-    public function testSetsParentCorrelationIdFromHeader(string $headerValue): void
+    public function testSetsTraceIdFromHeader(string $headerValue): void
     {
         $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', $headerValue);
+        $request->headers->set(TraceIdListener::HEADER_NAME, $headerValue);
 
         $event = $this->createRequestEvent($request, $this->mainRequestType());
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertSame($headerValue, $this->provider->getParentCorrelationId());
+        $this->assertSame($headerValue, $this->provider->getTraceId());
     }
 
     public function provideValidHeaders(): array
     {
         return [
-            'plain id' => ['parent-id-123'],
-            'max length' => [str_repeat('a', 128)],
+            'plain id' => ['trace-id-123'],
+            'max length' => [str_repeat('a', 200)],
         ];
     }
 
     public function testResetsStaleValueWhenHeaderAbsent(): void
     {
-        $this->provider->setParentCorrelationId('stale-id');
+        $this->provider->setTraceId('stale-id');
 
         $request = new Request();
 
@@ -56,7 +55,7 @@ class ParentCorrelationIdListenerTest extends TestCase
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertNull($this->provider->getParentCorrelationId());
+        $this->assertNull($this->provider->getTraceId());
     }
 
     /**
@@ -64,57 +63,57 @@ class ParentCorrelationIdListenerTest extends TestCase
      */
     public function testResetsStaleValueWhenHeaderIsInvalid(string $headerValue): void
     {
-        $this->provider->setParentCorrelationId('stale-id');
+        $this->provider->setTraceId('stale-id');
 
         $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', $headerValue);
+        $request->headers->set(TraceIdListener::HEADER_NAME, $headerValue);
 
         $event = $this->createRequestEvent($request, $this->mainRequestType());
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertNull($this->provider->getParentCorrelationId());
+        $this->assertNull($this->provider->getTraceId());
     }
 
     public function testOverwritesStaleValueWithValidHeader(): void
     {
-        $this->provider->setParentCorrelationId('stale-id');
+        $this->provider->setTraceId('stale-id');
 
         $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', 'fresh-id-456');
+        $request->headers->set(TraceIdListener::HEADER_NAME, 'fresh-id-456');
 
         $event = $this->createRequestEvent($request, $this->mainRequestType());
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertSame('fresh-id-456', $this->provider->getParentCorrelationId());
+        $this->assertSame('fresh-id-456', $this->provider->getTraceId());
     }
 
     public function provideInvalidHeaders(): array
     {
         return [
             'empty' => [''],
-            'too long' => [str_repeat('a', 129)],
-            'space' => ['parent id 123'],
-            'newline injection' => ["parent-id\ninjected=value"],
-            'tab' => ["parent-id\t123"],
-            'structural punctuation' => ['parent-id{"key":"value"}'],
-            'slash' => ['parent/id/123'],
+            'too long' => [str_repeat('a', 201)],
+            'space' => ['trace id 123'],
+            'newline injection' => ["trace-id\ninjected=value"],
+            'tab' => ["trace-id\t123"],
+            'structural punctuation' => ['trace-id{"key":"value"}'],
+            'slash' => ['trace/id/123'],
         ];
     }
 
     public function testIgnoresSubRequests(): void
     {
-        $this->provider->setParentCorrelationId('existing-id');
+        $this->provider->setTraceId('existing-id');
 
         $request = new Request();
-        $request->headers->set('Paysera-Correlation-Id', 'sub-request-id');
+        $request->headers->set(TraceIdListener::HEADER_NAME, 'sub-request-id');
 
         $event = $this->createRequestEvent($request, HttpKernelInterface::SUB_REQUEST);
 
         $this->listener->onKernelRequest($event);
 
-        $this->assertSame('existing-id', $this->provider->getParentCorrelationId());
+        $this->assertSame('existing-id', $this->provider->getTraceId());
     }
 
     private function createRequestEvent(Request $request, int $requestType): RequestEvent

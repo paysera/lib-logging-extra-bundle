@@ -57,6 +57,18 @@ class StdoutRecordEncoder
             unset($extra['correlation_id']);
         }
 
+        $parentCorrelationId = null;
+        if (array_key_exists('parent_corr_id', $extra)) {
+            $parentCorrelationId = $extra['parent_corr_id'];
+            unset($extra['parent_corr_id']);
+        }
+
+        $traceId = null;
+        if (array_key_exists('trace_id', $extra)) {
+            $traceId = $extra['trace_id'];
+            unset($extra['trace_id']);
+        }
+
         // When the message is an exception dump, keep the short headline in `message` and the
         // full original in `full_message`, matching the canonical evp formatter.
         $fullMessage = null;
@@ -77,6 +89,8 @@ class StdoutRecordEncoder
             'context' => $context,
             'extra' => $extra,
             'correlation_id' => $correlationId,
+            'parent_corr_id' => $parentCorrelationId,
+            'trace_id' => $traceId,
         ];
 
         return $this->encodeWithinByteLimit($fields) . "\n";
@@ -120,9 +134,9 @@ class StdoutRecordEncoder
             return $json;
         }
 
-        // Everything left is fixed-size, and correlation_id is the only one an oversize value can
-        // reach at runtime (it is hoisted verbatim from `extra`). Drop it so the cap always holds.
-        unset($fields['correlation_id']);
+        // Everything left is fixed-size except correlation_id, parent_corr_id and trace_id, which an
+        // oversize value can reach at runtime (all three are hoisted verbatim from `extra`).
+        unset($fields['correlation_id'], $fields['parent_corr_id'], $fields['trace_id']);
 
         return $this->toJson($fields);
     }

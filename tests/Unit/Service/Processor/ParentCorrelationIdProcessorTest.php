@@ -6,10 +6,13 @@ namespace Paysera\LoggingExtraBundle\Tests\Unit\Service\Processor;
 
 use Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider;
 use Paysera\LoggingExtraBundle\Service\Processor\ParentCorrelationIdProcessor;
+use Paysera\LoggingExtraBundle\Tests\Unit\Support\MonologRecordTrait;
 use PHPUnit\Framework\TestCase;
 
 class ParentCorrelationIdProcessorTest extends TestCase
 {
+    use MonologRecordTrait;
+
     private ParentCorrelationIdProvider $provider;
     private ParentCorrelationIdProcessor $processor;
 
@@ -25,66 +28,21 @@ class ParentCorrelationIdProcessorTest extends TestCase
 
         $record = $this->invokeProcessor();
 
-        $this->assertSame('parent-id-123', $this->getExtra($record, 'parent_corr_id'));
+        $this->assertSame('parent-id-123', $this->getRecordExtra($record)['parent_corr_id']);
     }
 
     public function testDoesNotAddKeyWhenNull(): void
     {
         $record = $this->invokeProcessor();
 
-        $this->assertArrayNotHasKey('parent_corr_id', $this->getAllExtra($record));
+        $this->assertArrayNotHasKey('parent_corr_id', $this->getRecordExtra($record));
     }
 
     /**
-     * @return \Monolog\LogRecord|array
+     * @return \Monolog\LogRecord|array<string, mixed>
      */
     private function invokeProcessor()
     {
-        if (class_exists('Monolog\LogRecord')) {
-            $record = new \Monolog\LogRecord(
-                new \DateTimeImmutable(),
-                'test',
-                \Monolog\Level::Info,
-                'test message',
-                [],
-                [],
-            );
-        } else {
-            $record = [
-                'message' => 'test message',
-                'context' => [],
-                'level' => 200,
-                'level_name' => 'INFO',
-                'channel' => 'test',
-                'datetime' => new \DateTimeImmutable(),
-                'extra' => [],
-            ];
-        }
-
-        return ($this->processor)($record);
-    }
-
-    /**
-     * @param \Monolog\LogRecord|array $record
-     */
-    private function getExtra($record, string $key): string
-    {
-        if ($record instanceof \Monolog\LogRecord) {
-            return $record->extra[$key];
-        }
-
-        return $record['extra'][$key];
-    }
-
-    /**
-     * @param \Monolog\LogRecord|array $record
-     */
-    private function getAllExtra($record): array
-    {
-        if ($record instanceof \Monolog\LogRecord) {
-            return $record->extra;
-        }
-
-        return $record['extra'];
+        return ($this->processor)($this->buildLogRecord());
     }
 }

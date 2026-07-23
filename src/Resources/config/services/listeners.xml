@@ -13,6 +13,7 @@
             <argument type="service" id="paysera_logging_extra.correlation_id_provider"/>
             <argument type="service" id="Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider"/>
             <argument type="service" id="Sentry\ClientInterface" on-invalid="null"/>
+            <argument type="service" id="Paysera\LoggingExtraBundle\Service\TraceIdProvider"/>
         </service>
 
         <service id="paysera_logging_extra.listener.correlation_id"
@@ -24,6 +25,12 @@
 
         <service id="Paysera\LoggingExtraBundle\Listener\ParentCorrelationIdListener">
             <argument type="service" id="Paysera\LoggingExtraBundle\Service\ParentCorrelationIdProvider"/>
+
+            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="255"/>
+        </service>
+
+        <service id="Paysera\LoggingExtraBundle\Listener\TraceIdListener">
+            <argument type="service" id="Paysera\LoggingExtraBundle\Service\TraceIdProvider"/>
 
             <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="255"/>
         </service>

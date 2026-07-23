@@ -15,6 +15,7 @@ Monolog already offers integration with both Sentry and Graylog. This bundle re-
 the following features:
 - clearer formatting for Graylog messages;
 - adds correlation_id to correlate messages in Sentry with messages in Graylog from the same process;
+- adds trace_id to correlate messages of one request across every service it touches;
 - allows grouping some exceptions by their class, independently from where they were thrown at or what are their message;
 - removes root prefix from messages (usually included in some exception messages);
 - maps context to be available with logged sentry event. 
@@ -98,6 +99,23 @@ paysera_logging_extra:
   application_name: app-something   # customise this to know which project message was sent from
 ```
 
+### Trace ID
+
+The `trace_id` field names an **entire request across every service it touches**. It is distinct from
+`correlation_id`, which names a single hop: each service regenerates its own correlation id and records
+the inbound one as `parent_corr_id`. So `correlation_id` finds the messages of one process, while
+`trace_id` finds the messages of one request everywhere it went.
+
+It works out of the box — there is nothing to configure. The bundle reads the `Paysera-Trace-Id` header
+the public gateway stamps on every inbound request and records it as `trace_id` on every log line and as
+a searchable Sentry tag. Bump the library and each service is traceable; no per-service code is needed.
+
+The incoming value is treated as untrusted: it is recorded only when non-empty, at most 200 characters
+(Sentry's tag-value limit), and made up of `[A-Za-z0-9._-]`. Anything else is ignored, so a hostile
+header cannot inject control characters or bloat log lines. Requests without the header (and console
+commands) simply carry no `trace_id` field, and the id is reset between reused iterations of a
+long-running process (PHP-FPM, RoadRunner) so it cannot leak from one request into the next.
+
 ### Dual-write to stdout (VictoriaLogs)
 
 To write every record to **both** Graylog and stdout (compact JSON Lines, collected by VictoriaLogs),
@@ -124,10 +142,13 @@ monolog:
 Each stdout line is one compact JSON object: `timestamp` (ISO-8601, microseconds + offset),
 `application_name`, `channel`, syslog `level` (DEBUG=7 … EMERGENCY=0), `level_name`, `message`,
 optional `full_message` (the raw original when the message is exception-shaped), optional
-`context`/`extra`, and a top-level `correlation_id` (hoisted from `extra`). Lines are capped
-at 32766 bytes; oversize records stay single-line, are flagged `truncated`, and are shrunk by dropping
-`full_message` first, then `context`/`extra`, then truncating `message` UTF-8-safely, and finally
-dropping `correlation_id`.
+`context`/`extra`, and top-level `correlation_id`, `parent_corr_id` and `trace_id` (all hoisted from
+`extra`, and each omitted when absent). Lines are capped at 32766 bytes; oversize records stay
+single-line, are flagged `truncated`, and are shrunk by dropping `full_message` first, then
+`context`/`extra`, then truncating `message` UTF-8-safely, and finally dropping
+`correlation_id`/`parent_corr_id`/`trace_id`. The three ids are hoisted so they survive the `extra`
+drop: oversize records are mostly exception dumps, which is exactly where a request needs to stay
+traceable.
 
 Exception-shaped messages (`RuntimeException: boom in /app/src/Foo.php:42`) are split into a short
 `message` and the raw `full_message`, identically to the canonical formatter in
@@ -144,6 +165,9 @@ Log with ERROR level and above to get messages in Sentry.
 
 Log with DEBUG level to get messages in Graylog in case any error occurs in the same request / process.
 To find those, start with error in Sentry and search messages in Graylog by provided `correlation_id`.
+
+To follow one request across services instead of within one process, search by `trace_id` (see
+[Trace ID](#trace-id)).
 
 ## Semantic versioning
 
