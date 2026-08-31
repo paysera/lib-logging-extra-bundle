@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.5.1
+### Fixed
+- `GroupExceptionsProcessor` no longer throws a `TypeError` from inside the logger call when a log record's `context['exception']` holds a non-object (e.g. `['exception' => $e->getMessage()]`, a string). Such values are now ignored — the record passes through unchanged and no Sentry fingerprint grouping is applied. Previously any error-level log with a string `exception` context crashed the logging call itself and the `TypeError` propagated to the caller.
+
 ## 3.5.0
 ### Added
 - Record a request-spanning `trace_id` log field, distinct from the per-hop `correlation_id`. It works with no configuration: `TraceIdListener` reads the `Paysera-Trace-Id` header the public gateway stamps on every inbound request into a `TraceIdProvider`, and `TraceIdProcessor` writes it onto every log line — so a service only bumps the library to become traceable, with no provider code of its own. The incoming header is untrusted and validated in `TraceIdProvider::setTraceId()` (mirroring `ParentCorrelationIdProvider`): values that are empty, longer than 200 characters (Sentry's tag-value limit), or contain characters outside `[A-Za-z0-9._-]` are ignored, so a hostile header cannot inject control characters or bloat log lines and Sentry tags. Requests without the header (and console commands) carry no `trace_id` field, and the id is reset between reused iterations of a long-running process (PHP-FPM, RoadRunner) so it cannot leak across requests. `trace_id` is also promoted to a searchable Sentry tag (`context.tags.trace_id`), mirroring `correlation_id`, so a request can be filtered by it in Sentry as well as in Graylog/VictoriaLogs. The existing correlation-id mechanism is unchanged. `IterationEndListener` takes the `TraceIdProvider` as an optional fourth constructor argument, after the existing ones, so code wiring the listener manually keeps working unchanged (it just resets no trace id).
