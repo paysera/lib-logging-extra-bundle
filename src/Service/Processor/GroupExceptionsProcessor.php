@@ -29,6 +29,10 @@ if (class_exists('Monolog\LogRecord')) {
             }
 
             $exception = $record->context['exception'];
+            if (!is_object($exception)) {
+                return $record;
+            }
+
             $exceptionClass = get_class($exception);
 
             if (isset($this->exceptionsClassesToGroup[$exceptionClass])) {
@@ -64,6 +68,10 @@ if (class_exists('Monolog\LogRecord')) {
             }
 
             $exception = $record['context']['exception'];
+            if (!is_object($exception)) {
+                return $record;
+            }
+
             $exceptionClass = get_class($exception);
 
             if (isset($this->exceptionsClassesToGroup[$exceptionClass])) {
