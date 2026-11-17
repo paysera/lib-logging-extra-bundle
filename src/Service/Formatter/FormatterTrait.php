@@ -14,8 +14,6 @@ use Throwable;
 trait FormatterTrait
 {
     /**
-     * Normalizes given data with pre-processing for Doctrine entities and collections.
-     *
      * @param mixed $data
      * @param int $depth
      * @return mixed
@@ -29,32 +27,30 @@ trait FormatterTrait
 
     private function prenormalizeData($data, $depth)
     {
-        // Monolog 1.x and 2.x have different depth tracking:
-        // - Monolog 1.x: entity properties are at depth 3, nested at depth 4
-        // - Monolog 2.x: entity properties are at depth 2, nested at depth 3
-        // We detect Monolog version using the Logger::API constant (1 for 1.x, 2 for 2.x, 3 for 3.x)
         $maxDepthForExpansion = (defined('Monolog\Logger::API') && Logger::API >= 2) ? 2 : 3;
 
         if ($data instanceof PersistentCollection) {
-            $isInitialized = $data->isInitialized();
-
-            // Only expand initialized collections up to the threshold depth
-            // This allows expansion for direct properties of logged entities, but not for nested entities
-            // When expanded, return array of class names for entities
-            if ($isInitialized && $depth <= $maxDepthForExpansion) {
+            if ($data->isInitialized() && $depth <= $maxDepthForExpansion) {
                 $result = [];
                 foreach ($data as $entity) {
-                    // Convert entities in collections to just their class name
                     $result[] = is_object($entity) ? get_class($entity) : $entity;
                 }
                 return $result;
             }
-            // Always return class name for uninitialized or deep collections
             return get_class($data);
         }
 
-        // Always normalize Proxies regardless of depth to get at least the ID
-        if ($data instanceof Proxy || is_a($data, 'Doctrine\Common\Persistence\Proxy')) {
+        if (
+            is_a($data, 'Symfony\Component\Security\Core\Authentication\Token\TokenInterface')
+            || (
+                is_a($data, 'Symfony\Component\Security\Core\User\UserInterface')
+                && !$this->isUninitializedProxy($data)
+            )
+        ) {
+            return $this->normalizeSecurityObject($data);
+        }
+
+        if ($this->isProxy($data)) {
             return $this->normalizeProxy($data);
         }
 
@@ -102,6 +98,55 @@ trait FormatterTrait
         return $result;
     }
 
+    private function normalizeSecurityObject($tokenOrUser): array
+    {
+        return [
+            'class' => get_class($tokenOrUser),
+            'user_identifier' => $this->hideEmailAddress($this->readUserIdentifier($tokenOrUser)),
+        ];
+    }
+
+    private function readUserIdentifier($tokenOrUser): ?string
+    {
+        try {
+            if ($this->holdsUninitializedProxyUser($tokenOrUser)) {
+                return null;
+            }
+
+            $userIdentifier = method_exists($tokenOrUser, 'getUserIdentifier')
+                ? $tokenOrUser->getUserIdentifier()
+                : $tokenOrUser->getUsername();
+
+            return $userIdentifier === '' ? null : $userIdentifier;
+        } catch (Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function holdsUninitializedProxyUser($tokenOrUser): bool
+    {
+        return method_exists($tokenOrUser, 'getUser') && $this->isUninitializedProxy($tokenOrUser->getUser());
+    }
+
+    private function hideEmailAddress(?string $userIdentifier): ?string
+    {
+        if ($userIdentifier !== null && strpos($userIdentifier, '@') !== false) {
+            return '[email]';
+        }
+
+        return $userIdentifier;
+    }
+
+    private function isProxy($data): bool
+    {
+        return $data instanceof Proxy || is_a($data, 'Doctrine\Common\Persistence\Proxy');
+    }
+
+    private function isUninitializedProxy($data): bool
+    {
+        return $this->isProxy($data) && !$data->__isInitialized();
+    }
+
     private function normalizeProxy(Proxy $data)
     {
         if ($data->__isInitialized()) {
@@ -117,7 +162,6 @@ trait FormatterTrait
 
     protected function toJson($data, $ignoreErrors = false): string
     {
-        // Monolog 2.x has Utils::jsonEncode(), Monolog 1.x does not
         if (method_exists(Utils::class, 'jsonEncode')) {
             return Utils::jsonEncode(
                 $data,
@@ -126,7 +170,6 @@ trait FormatterTrait
             );
         }
 
-        // Fallback for Monolog 1.x
         return json_encode(
             $data,
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | ($ignoreErrors ? 0 : JSON_THROW_ON_ERROR)
