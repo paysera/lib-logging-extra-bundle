@@ -11,9 +11,6 @@ use Doctrine\ORM\PersistentCollection;
 use Monolog\Utils;
 use Throwable;
 
-/**
- * To be used on classes extending NormalizerFormatter
- */
 trait FormatterTrait
 {
     protected function normalize($data, $depth = 0)
@@ -25,6 +22,16 @@ trait FormatterTrait
 
     private function prenormalizeData($data, $depth)
     {
+        if (
+            is_a($data, 'Symfony\Component\Security\Core\Authentication\Token\TokenInterface')
+            || (
+                is_a($data, 'Symfony\Component\Security\Core\User\UserInterface')
+                && !$this->isUninitializedProxy($data)
+            )
+        ) {
+            return $this->normalizeSecurityObject($data);
+        }
+
         if ($depth > 2) {
             return $this->getScalarRepresentation($data);
         }
@@ -33,7 +40,7 @@ trait FormatterTrait
             return $data->isInitialized() ? iterator_to_array($data) : get_class($data);
         }
 
-        if ($data instanceof Proxy || $data instanceof LegacyProxy) {
+        if ($this->isProxy($data)) {
             return $this->normalizeProxy($data);
         }
 
@@ -75,6 +82,55 @@ trait FormatterTrait
         }
 
         return $result;
+    }
+
+    private function normalizeSecurityObject($tokenOrUser): array
+    {
+        return [
+            'class' => get_class($tokenOrUser),
+            'user_identifier' => $this->hideEmailAddress($this->readUserIdentifier($tokenOrUser)),
+        ];
+    }
+
+    private function readUserIdentifier($tokenOrUser): ?string
+    {
+        try {
+            if ($this->holdsUninitializedProxyUser($tokenOrUser)) {
+                return null;
+            }
+
+            $userIdentifier = method_exists($tokenOrUser, 'getUserIdentifier')
+                ? $tokenOrUser->getUserIdentifier()
+                : $tokenOrUser->getUsername();
+
+            return $userIdentifier === '' ? null : $userIdentifier;
+        } catch (Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function holdsUninitializedProxyUser($tokenOrUser): bool
+    {
+        return method_exists($tokenOrUser, 'getUser') && $this->isUninitializedProxy($tokenOrUser->getUser());
+    }
+
+    private function hideEmailAddress(?string $userIdentifier): ?string
+    {
+        if ($userIdentifier !== null && strpos($userIdentifier, '@') !== false) {
+            return '[email]';
+        }
+
+        return $userIdentifier;
+    }
+
+    private function isProxy($data): bool
+    {
+        return $data instanceof Proxy || $data instanceof LegacyProxy;
+    }
+
+    private function isUninitializedProxy($data): bool
+    {
+        return $this->isProxy($data) && !$data->__isInitialized();
     }
 
     private function normalizeProxy(Proxy $data)
