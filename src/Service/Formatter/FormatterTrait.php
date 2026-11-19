@@ -111,7 +111,8 @@ trait FormatterTrait
 
     private function holdsUninitializedProxyUser($tokenOrUser): bool
     {
-        return method_exists($tokenOrUser, 'getUser') && $this->isUninitializedProxy($tokenOrUser->getUser());
+        return is_a($tokenOrUser, 'Symfony\Component\Security\Core\Authentication\Token\TokenInterface')
+            && $this->isUninitializedProxy($tokenOrUser->getUser());
     }
 
     private function hideEmailAddress(?string $userIdentifier): ?string

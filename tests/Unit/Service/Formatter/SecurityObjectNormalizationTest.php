@@ -10,6 +10,7 @@ use Monolog\Logger;
 use Paysera\LoggingExtraBundle\Service\Formatter\GelfMessageFormatter;
 use Paysera\LoggingExtraBundle\Service\Formatter\LineFormatter;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\PlainObject;
+use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\AccountUser;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\BrokenToken;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\ProxyUser;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\Token;
@@ -158,6 +159,19 @@ class SecurityObjectNormalizationTest extends TestCase
                 'token' => json_decode($message->getAdditional('ctxt_token'), true),
                 'userLoaded' => $user->__isInitialized(),
             ]
+        );
+    }
+
+    public function testUserWithItsOwnUninitializedProxyGetterKeepsItsIdentifier(): void
+    {
+        $account = new ProxyUser(self::PROXY_USER_ID, false, 'account', self::USER_PASSWORD);
+        $user = new AccountUser(self::USER_IDENTIFIER, self::USER_PASSWORD, $account);
+
+        $message = (new GelfMessageFormatter('app'))->format($this->buildRecord(['user' => $user]));
+
+        $this->assertSame(
+            ['class' => AccountUser::class, 'user_identifier' => self::USER_IDENTIFIER],
+            json_decode($message->getAdditional('ctxt_user'), true)
         );
     }
 
