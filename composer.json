@@ -27,6 +27,7 @@
         "doctrine/doctrine-bundle": "^2.6",
         "doctrine/orm": "^2.10",
         "phpunit/phpunit": "^9.5.10",
+        "symfony/security-core": "^4.4.20 || ^5.0.11 || ^6.0 || ^7.0",
         "symfony/yaml": "^4.3 || ^5.0 || ^6.0 || ^7.0"
     },
     "autoload": {
