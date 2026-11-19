@@ -11,6 +11,7 @@ use Paysera\LoggingExtraBundle\Service\Formatter\LineFormatter;
 use Paysera\LoggingExtraBundle\Service\Formatter\StdoutJsonFormatter;
 use Paysera\LoggingExtraBundle\Service\Formatter\StdoutRecordEncoder;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\PlainObject;
+use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\AccountUser;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\BrokenToken;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\ProxyUser;
 use Paysera\LoggingExtraBundle\Tests\Unit\Fixtures\Security\Token;
@@ -161,6 +162,20 @@ class SecurityObjectNormalizationTest extends TestCase
                 'userLoaded' => false,
             ],
             ['context' => $decoded['context'], 'userLoaded' => $user->__isInitialized()]
+        );
+    }
+
+    public function testUserWithItsOwnUninitializedProxyGetterKeepsItsIdentifier(): void
+    {
+        $account = new ProxyUser(self::PROXY_USER_ID, false, 'account', self::USER_PASSWORD);
+        $user = new AccountUser(self::USER_IDENTIFIER, self::USER_PASSWORD, $account);
+        $formatter = new StdoutJsonFormatter(new StdoutRecordEncoder('app', new ExceptionMessageParser()));
+
+        $decoded = json_decode($formatter->format($this->buildLogRecord(['context' => ['user' => $user]])), true);
+
+        $this->assertSame(
+            ['user' => ['class' => AccountUser::class, 'user_identifier' => self::USER_IDENTIFIER]],
+            $decoded['context']
         );
     }
 
